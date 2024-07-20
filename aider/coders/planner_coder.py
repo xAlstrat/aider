@@ -18,6 +18,45 @@ class PlannerCoder(Coder):
     def __init__(self, *args, **kwargs):
         self.gpt_prompts = PlannerPrompts()
         super().__init__(*args, **kwargs)
+        
+    def get_files_messages(self):
+        files_messages = []
+
+        repo_content = self.get_repo_map()
+        if repo_content:
+            files_messages += [
+                dict(role="user", content=repo_content),
+                dict(
+                    role="assistant",
+                    content="Ok, I'm going to prepare a detailed implementation plan based on your requirements making sure to look at project files and project overview content",
+                ),
+            ]
+
+        if self.abs_fnames:
+            files_content = self.gpt_prompts.files_content_prefix
+            files_content += self.get_files_content()
+            files_reply = "Ok, any changes I propose will be to those files."
+        elif repo_content:
+            files_content = self.gpt_prompts.files_no_full_files_with_repo_map
+            files_reply = self.gpt_prompts.files_no_full_files_with_repo_map_reply
+        else:
+            files_content = self.gpt_prompts.files_no_full_files
+            files_reply = "Ok."
+
+        if files_content:
+            files_messages += [
+                dict(role="user", content=files_content),
+                dict(role="assistant", content=files_reply),
+            ]
+
+        images_message = self.get_images_message()
+        if images_message is not None:
+            files_messages += [
+                images_message,
+                dict(role="assistant", content="Ok."),
+            ]
+
+        return files_messages
 
     def get_edits(self):
         content = self.partial_response_content
