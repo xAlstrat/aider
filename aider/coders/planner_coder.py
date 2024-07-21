@@ -28,7 +28,7 @@ class PlannerCoder(Coder):
                 dict(role="user", content=repo_content),
                 dict(
                     role="assistant",
-                    content="Ok, I'm going to prepare a detailed implementation plan based on your requirements making sure to look at project files and project overview content",
+                    content="Ok, If `PROJECT_OVERVIEW.md` & `CURRENT_PLAN.md` are listed in the repository I'm going to add you to read their content and any other file I found relevant understand the overall project. If files are not present in your repository, I will create them after collecting feedback from you about your requirements.",
                 ),
             ]
 
