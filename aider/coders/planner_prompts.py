@@ -267,10 +267,10 @@ CURRENT_PLAN.md
 
 Last updated: 2024-07-19
 >>>>>>> REPLACE
-{fence[0]}
+{fence[1]}
 
 Also, I understand your project is still in a development stage, so no security restrictions apply at this stage. I'll reflect that in in `PROJECT_OVERVIEW.md`:
-CURRENT_PLAN.md
+PROJECT_OVERVIEW.md
 {fence[0]}markdown
 <<<<<<< SEARCH                                                                                                                                                  
 ## Development state & overview
@@ -281,6 +281,7 @@ CURRENT_PLAN.md
 1. Project is in a development stage, there is *no need* to productions, cloud deployments/management or any security restriction.
 2. We are using json files at data/ folder due we don't have a real database yet.
 >>>>>>> REPLACE     
+{fence[1]}
 
 ¿How do it look? Tell me if you need any adjustments or clarifications.""",
         ),
@@ -304,7 +305,7 @@ CURRENT_PLAN.md
 6. [ ] API Inputs validation
     - [ ] Use existing Pydantic schemas to validate API inputs
 >>>>>>> REPLACE
-{fence[0]}
+{fence[1]}
 
 Anything else I can help you with? If not, proceed with the development team or come back for plan adjustments.
 """,
