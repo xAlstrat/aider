@@ -12,9 +12,8 @@ from .planner_prompts import PlannerPrompts
 class PlannerAgent(Agent):
     agent_type = "planner"
 
-    def __init__(self, *args, **kwargs):
-        self.diff_format = EditBlockDiffFormat()
-        self.gpt_prompts = PlannerPrompts(diff_format=self.diff_format)
+    def __init__(self, *args, diff_format=None, **kwargs):
+        self.gpt_prompts = PlannerPrompts(diff_format=diff_format)
         super().__init__(*args, **kwargs)
         
     def get_files_messages(self):

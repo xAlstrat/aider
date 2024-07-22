@@ -11,6 +11,7 @@ class WholeFileCoder(Agent):
     edit_format = "whole"
 
     def __init__(self, *args, diff_format=None, **kwargs):
+        raise RuntimeError("Deprecated, use 'coder' agent_type and 'whole' edit_format instead")
         self.gpt_prompts = WholeFilePrompts(diff_format=diff_format)
         super().__init__(*args, diff_format=diff_format, **kwargs)
 

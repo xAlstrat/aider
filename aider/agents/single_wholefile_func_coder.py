@@ -31,7 +31,7 @@ class SingleWholeFileFunctionCoder(Agent):
     ]
 
     def __init__(self, *args, **kwargs):
-        raise RuntimeError("Deprecated, needs to be refactored to support get_edits/apply_edits")
+        raise RuntimeError("Deprecated, needs to be refactored into a edit_format module used throught CoderAgent")
         self.gpt_prompts = SingleWholeFileFunctionPrompts()
         super().__init__(*args, **kwargs)
 

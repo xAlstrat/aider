@@ -47,6 +47,7 @@ class UnifiedDiffCoder(Agent):
     edit_format = "udiff"
 
     def __init__(self, *args, **kwargs):
+        raise RuntimeError("Deprecated, needs to be refactored into a edit_format module used throught CoderAgent")
         self.gpt_prompts = UnifiedDiffPrompts()
         super().__init__(*args, **kwargs)
 
