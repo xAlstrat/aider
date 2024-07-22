@@ -14,7 +14,7 @@ class PlannerAgent(Agent):
 
     def __init__(self, *args, diff_format=None, **kwargs):
         self.gpt_prompts = PlannerPrompts(diff_format=diff_format)
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, diff_format=diff_format, **kwargs)
         
     def get_files_messages(self):
         files_messages = []

@@ -55,7 +55,7 @@ All changes to files must use the *SEARCH/REPLACE block* format."""
     ONLY EVER RETURN CODE/CONTENT IN A *SEARCH/REPLACE BLOCK*!
     """
     
-    def format_file_diff(self, file_path, file_language, original_full=None, updated_full=None, chunks=None):
+    def format_file_diff(self, file_path, file_language, original_full=None, updated_full=None, chunks=[]):
         # no need to use original_full and updated_full for this format
         formatted_chunks = []
         
