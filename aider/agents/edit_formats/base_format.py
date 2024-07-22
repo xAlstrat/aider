@@ -13,4 +13,5 @@ class BaseDiffFormat:
         raise NotImplementedError()
     
     def format_file_diff(self, file_path, file_language, original_full=None, updated_full=None, chunks=None):
+        # raise not implemented
         raise NotImplementedError()
