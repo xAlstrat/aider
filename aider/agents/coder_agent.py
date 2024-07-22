@@ -8,55 +8,16 @@ from pathlib import Path
 from aider import utils
 
 from ..dump import dump  # noqa: F401
-from .base_coder import Coder
-from .planner_prompts import PlannerPrompts
+from .base_agent import Agent
+from .coder_prompts import CoderPrompts
 
 
-class PlannerCoder(Coder):
-    edit_format = "planner"
+class CoderAgent(Agent):
+    agent_type = "coder"
 
-    def __init__(self, *args, **kwargs):
-        self.gpt_prompts = PlannerPrompts()
-        super().__init__(*args, **kwargs)
-        
-    def get_files_messages(self):
-        files_messages = []
-
-        repo_content = self.get_repo_map()
-        if repo_content:
-            files_messages += [
-                dict(role="user", content=repo_content),
-                dict(
-                    role="assistant",
-                    content="Ok, If `PROJECT_OVERVIEW.md` & `CURRENT_PLAN.md` are listed in the repository I'm going to add you to read their content and any other file I found relevant understand the overall project. If files are not present in your repository, I will create them after collecting feedback from you about your requirements.",
-                ),
-            ]
-
-        if self.abs_fnames:
-            files_content = self.gpt_prompts.files_content_prefix
-            files_content += self.get_files_content()
-            files_reply = "Ok, any changes I propose will be to those files."
-        elif repo_content:
-            files_content = self.gpt_prompts.files_no_full_files_with_repo_map
-            files_reply = self.gpt_prompts.files_no_full_files_with_repo_map_reply
-        else:
-            files_content = self.gpt_prompts.files_no_full_files
-            files_reply = "Ok."
-
-        if files_content:
-            files_messages += [
-                dict(role="user", content=files_content),
-                dict(role="assistant", content=files_reply),
-            ]
-
-        images_message = self.get_images_message()
-        if images_message is not None:
-            files_messages += [
-                images_message,
-                dict(role="assistant", content="Ok."),
-            ]
-
-        return files_messages
+    def __init__(self, *args, diff_format=None, **kwargs):
+        self.gpt_prompts = CoderPrompts(diff_format=diff_format)
+        super().__init__(*args, diff_format=diff_format, **kwargs)
 
     def get_edits(self):
         content = self.partial_response_content
@@ -551,3 +512,32 @@ def find_similar_lines(search_lines, content_lines, threshold=0.6):
 
     best = content_lines[best_match_i:best_match_end]
     return "\n".join(best)
+
+
+def main():
+    history_md = Path(sys.argv[1]).read_text()
+    if not history_md:
+        return
+
+    messages = utils.split_chat_history_markdown(history_md)
+
+    for msg in messages:
+        msg = msg["content"]
+        edits = list(find_original_update_blocks(msg))
+
+        for fname, before, after in edits:
+            # Compute diff
+            diff = difflib.unified_diff(
+                before.splitlines(keepends=True),
+                after.splitlines(keepends=True),
+                fromfile="before",
+                tofile="after",
+            )
+            diff = "".join(diff)
+            dump(before)
+            dump(after)
+            dump(diff)
+
+
+if __name__ == "__main__":
+    main()

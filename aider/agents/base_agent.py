@@ -46,7 +46,7 @@ def wrap_fence(name):
     return f"<{name}>", f"</{name}>"
 
 
-class Coder:
+class Agent:
     abs_fnames = None
     repo = None
     last_aider_commit_hash = None
@@ -61,6 +61,7 @@ class Coder:
     last_keyboard_interrupt = None
     num_reflections = 0
     max_reflections = 3
+    agent_type = None
     edit_format = None
     yield_stream = False
     temperature = 0
@@ -76,18 +77,23 @@ class Coder:
         self,
         main_model=None,
         edit_format=None,
+        agent_type=None,
         io=None,
         from_coder=None,
         summarize_from_coder=True,
         **kwargs,
     ):
         from . import (
-            EditBlockCoder,
-            EditBlockFencedCoder,
-            HelpCoder,
+            CoderAgent,
+            HelpAgent,
             UnifiedDiffCoder,
             WholeFileCoder,
-            PlannerCoder
+            PlannerAgent
+        )
+        from .edit_formats import (
+            EditBlockDiffFormat,
+            EditBlockFencedDiffFormat,
+            WholeDiffFormat
         )
 
         if not main_model:
@@ -101,6 +107,10 @@ class Coder:
                 edit_format = from_coder.edit_format
             else:
                 edit_format = main_model.edit_format
+                
+        if agent_type is None:
+            if from_coder:
+                agent_type = from_coder.agent_type
 
         if not io and from_coder:
             io = from_coder.io
@@ -129,27 +139,51 @@ class Coder:
 
             kwargs = use_kwargs
 
+        # if edit_format == "diff":
+        #     res = EditBlockCoder(main_model, io, **kwargs)
+        # elif edit_format == "diff-fenced":
+        #     res = EditBlockFencedCoder(main_model, io, **kwargs)
+        # elif edit_format == "whole":
+        #     res = WholeFileCoder(main_model, io, **kwargs)
+        # elif edit_format == "udiff":
+        #     res = UnifiedDiffCoder(main_model, io, **kwargs)
+        # elif edit_format == "help":
+        #     res = HelpCoder(main_model, io, **kwargs)
+        # elif edit_format == "planner":
+        #     res = PlannerCoder(main_model, io, **kwargs)
+        # else:
+        #     raise ValueError(f"Unknown edit format {edit_format}")
+        
         if edit_format == "diff":
-            res = EditBlockCoder(main_model, io, **kwargs)
+            diff_format = EditBlockDiffFormat()
         elif edit_format == "diff-fenced":
-            res = EditBlockFencedCoder(main_model, io, **kwargs)
+            diff_format = EditBlockFencedDiffFormat()
         elif edit_format == "whole":
-            res = WholeFileCoder(main_model, io, **kwargs)
+            diff_format = WholeDiffFormat()
         elif edit_format == "udiff":
-            res = UnifiedDiffCoder(main_model, io, **kwargs)
-        elif edit_format == "help":
-            res = HelpCoder(main_model, io, **kwargs)
-        elif edit_format == "planner":
-            res = PlannerCoder(main_model, io, **kwargs)
+            diff_format = UnifiedDiffCoder()
         else:
             raise ValueError(f"Unknown edit format {edit_format}")
+        
+        kwargs['diff_format'] = diff_format
+        
+        if agent_type == "coder":
+            res = CoderAgent(main_model, io, **kwargs)
+        elif agent_type == "developer":
+            res = CoderAgent(main_model, io, **kwargs)
+        elif agent_type == "help":
+            res = HelpAgent(main_model, io, **kwargs)
+        elif agent_type == "planner":
+            res = PlannerAgent(main_model, io, **kwargs)
+        else:
+            raise ValueError(f"Unknown agent type {agent_type}")
 
         res.original_kwargs = dict(kwargs)
 
         return res
 
     def clone(self, **kwargs):
-        return Coder.create(from_coder=self, **kwargs)
+        return Agent.create(from_coder=self, **kwargs)
 
     def get_announcements(self):
         lines = []
@@ -159,7 +193,7 @@ class Coder:
         main_model = self.main_model
         weak_model = main_model.weak_model
         prefix = "Model:"
-        output = f" {main_model.name} with {self.edit_format} edit format"
+        output = f" {main_model.name} with {self.diff_format.id} diff format. Agent type: {self.agent_type}"
         if weak_model is not main_model:
             prefix = "Models:"
             output += f", weak model {weak_model.name}"
@@ -235,6 +269,7 @@ class Coder:
         attribute_commit_message=False,
         aider_commit_hashes=None,
         map_mul_no_files=8,
+        diff_format=None,
     ):
         if not fnames:
             fnames = []
@@ -246,6 +281,9 @@ class Coder:
             self.aider_commit_hashes = aider_commit_hashes
         else:
             self.aider_commit_hashes = set()
+            
+        self.diff_format = diff_format
+        self.diff_format.agent = self
 
         self.chat_completion_call_hashes = []
         self.chat_completion_response_hashes = []
@@ -789,7 +827,7 @@ class Coder:
                     dict(role="assistant", content="Ok."),
                 ]
 
-        main_sys += "\n" + self.fmt_system_prompt(self.gpt_prompts.system_reminder)
+        main_sys += "\n" + self.fmt_system_prompt(self.diff_format.system_reminder)
         messages = [
             dict(role="system", content=main_sys),
         ]
@@ -800,7 +838,7 @@ class Coder:
         messages += self.get_files_messages()
 
         reminder_message = [
-            dict(role="system", content=self.fmt_system_prompt(self.gpt_prompts.system_reminder)),
+            dict(role="system", content=self.fmt_system_prompt(self.diff_format.system_reminder)),
         ]
 
         # TODO review impact of token count on image messages
@@ -828,7 +866,7 @@ class Coder:
                 new_content = (
                     final["content"]
                     + "\n\n"
-                    + self.fmt_system_prompt(self.gpt_prompts.system_reminder)
+                    + self.fmt_system_prompt(self.diff_format.system_reminder)
                 )
                 messages[-1] = dict(role=final["role"], content=new_content)
 
@@ -1401,9 +1439,9 @@ class Coder:
         return res
 
     def update_files(self):
-        edits = self.get_edits()
+        edits = self.diff_format.get_edits()
         edits = self.prepare_to_edit(edits)
-        self.apply_edits(edits)
+        self.diff_format.apply_edits(edits)
         return set(edit[0] for edit in edits)
 
     def apply_updates(self):

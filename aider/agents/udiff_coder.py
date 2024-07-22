@@ -3,7 +3,7 @@ from itertools import groupby
 from pathlib import Path
 
 from ..dump import dump  # noqa: F401
-from .base_coder import Coder
+from .base_agent import Agent
 from .search_replace import (
     SearchTextNotUnique,
     all_preprocs,
@@ -43,7 +43,7 @@ other_hunks_applied = (
 )
 
 
-class UnifiedDiffCoder(Coder):
+class UnifiedDiffCoder(Agent):
     edit_format = "udiff"
 
     def __init__(self, *args, **kwargs):

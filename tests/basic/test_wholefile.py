@@ -5,8 +5,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from aider.coders import Coder
-from aider.coders.wholefile_coder import WholeFileCoder
+from aider.agents import Agent
+from aider.agents.wholefile_coder import WholeFileCoder
 from aider.dump import dump  # noqa: F401
 from aider.io import InputOutput
 from aider.models import Model
@@ -288,7 +288,7 @@ after b
         files = [file1]
 
         # Initialize the Coder object with the mocked IO and mocked repo
-        coder = Coder.create(
+        coder = Agent.create(
             self.GPT35, "whole", io=InputOutput(), fnames=files, stream=False, pretty=False
         )
 

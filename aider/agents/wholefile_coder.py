@@ -3,16 +3,16 @@ from pathlib import Path
 from aider import diffs
 
 from ..dump import dump  # noqa: F401
-from .base_coder import Coder
+from .base_agent import Agent
 from .wholefile_prompts import WholeFilePrompts
 
 
-class WholeFileCoder(Coder):
+class WholeFileCoder(Agent):
     edit_format = "whole"
 
-    def __init__(self, *args, **kwargs):
-        self.gpt_prompts = WholeFilePrompts()
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, diff_format=None, **kwargs):
+        self.gpt_prompts = WholeFilePrompts(diff_format=diff_format)
+        super().__init__(*args, diff_format=diff_format, **kwargs)
 
     def update_cur_messages(self, edited):
         if edited:

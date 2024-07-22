@@ -164,6 +164,13 @@ def get_parser(default_config_files, git_root):
         help="Specify what edit format the LLM should use (default depends on model)",
     )
     group.add_argument(
+        "--agent-type",
+        metavar="AGENT_TYPE",
+        default="coder",
+        help="Specify default agent to use in chat (default: coder)",
+    )
+    
+    group.add_argument(
         "--weak-model",
         metavar="WEAK_MODEL",
         default=None,

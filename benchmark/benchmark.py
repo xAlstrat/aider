@@ -24,7 +24,7 @@ from plots import plot_refactoring
 from rich.console import Console
 
 from aider import models
-from aider.coders import Coder
+from aider.agents import Agent
 from aider.dump import dump  # noqa: F401
 from aider.io import InputOutput
 
@@ -557,7 +557,7 @@ def run_test_real(
     show_fnames = ",".join(map(str, fnames))
     print("fnames:", show_fnames)
 
-    coder = Coder.create(
+    coder = Agent.create(
         main_model,
         edit_format,
         io,

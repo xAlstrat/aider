@@ -1,12 +1,12 @@
 import json
 
 from ..dump import dump  # noqa: F401
-from .base_coder import Coder
-from .editblock_coder import do_replace
+from .base_agent import Agent
+from .coder_agent import do_replace
 from .editblock_func_prompts import EditBlockFunctionPrompts
 
 
-class EditBlockFunctionCoder(Coder):
+class EditBlockFunctionCoder(Agent):
     functions = [
         dict(
             name="replace_lines",
@@ -58,7 +58,7 @@ class EditBlockFunctionCoder(Coder):
     ]
 
     def __init__(self, code_format, *args, **kwargs):
-        raise RuntimeError("Deprecated, needs to be refactored to support get_edits/apply_edits")
+        raise RuntimeError("Deprecated, needs to be refactored into a edit_format module used throught CoderAgent")
         self.code_format = code_format
 
         if code_format == "string":

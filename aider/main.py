@@ -11,7 +11,7 @@ from prompt_toolkit.enums import EditingMode
 
 from aider import __version__, models, utils
 from aider.args import get_parser
-from aider.coders import Coder
+from aider.agents import Agent
 from aider.commands import SwitchModel
 from aider.io import InputOutput
 from aider.llm import litellm  # noqa: F401; properly init litellm on launch
@@ -458,9 +458,10 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
         models.sanity_check_models(io, main_model)
 
     try:
-        coder = Coder.create(
+        coder = Agent.create(
             main_model=main_model,
             edit_format=args.edit_format,
+            agent_type=args.agent_type,
             io=io,
             ##
             fnames=fnames,
@@ -586,7 +587,7 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
             coder.run()
             return
         except SwitchModel as switch:
-            coder = Coder.create(main_model=switch.model, io=io, from_coder=coder)
+            coder = Agent.create(main_model=switch.model, io=io, from_coder=coder)
             coder.show_announcements()
 
 

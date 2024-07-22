@@ -1,6 +1,6 @@
 import unittest
 
-from aider.coders.udiff_coder import find_diffs
+from aider.agents.udiff_coder import find_diffs
 from aider.dump import dump  # noqa: F401
 
 

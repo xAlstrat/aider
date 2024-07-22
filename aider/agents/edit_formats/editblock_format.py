@@ -6,24 +6,80 @@ from difflib import SequenceMatcher
 from pathlib import Path
 
 from aider import utils
+from .base_format import BaseDiffFormat
+from ...dump import dump  # noqa: F401
 
-from ..dump import dump  # noqa: F401
-from .base_coder import Coder
-from .editblock_prompts import EditBlockPrompts
+class EditBlockDiffFormat(BaseDiffFormat):
+    id = "EDIT_BLOCK"
+    name = "SEARCH/REPLACE block"
+    
+    diff_format_instructions = """Once you done with the request you MUST:
+1. Decide if you need to propose *SEARCH/REPLACE* edits to any files that haven't been added to the chat. You can create new files without asking. But if you need to propose edits to existing files not already added to the chat, you *MUST* tell the user their full path names and ask them to *add the files to the chat*. End your reply and wait for their approval. You can keep asking if you then decide you need to edit more files.
+2. Think step-by-step and explain the needed changes with a numbered list of short sentences.
+3. Describe each change with a *SEARCH/REPLACE block* per the examples below. All changes to files must use this *SEARCH/REPLACE block* format. ONLY EVER RETURN CODE IN A *SEARCH/REPLACE BLOCK*!
+
+All changes to files must use the *SEARCH/REPLACE block* format."""
+
+    system_reminder = """# *SEARCH/REPLACE block* Rules:
+
+    Every *SEARCH/REPLACE block* must use this format:
+    1. The file path alone on a line, verbatim. No bold asterisks, no quotes around it, no escaping of characters, etc.
+    2. The opening fence and file language, eg: {fence[0]}python
+    3. The start of search block: <<<<<<< SEARCH
+    4. A contiguous chunk of lines to search for in the source file
+    5. The dividing line: =======
+    6. The lines to replace into the source file
+    7. The end of the replace block: >>>>>>> REPLACE
+    8. The closing fence: {fence[1]}
+
+    Every *SEARCH* section must *EXACTLY MATCH* the existing source file, character for character, including all comments, docstrings, etc.
 
 
-class EditBlockCoder(Coder):
-    edit_format = "diff"
+    *SEARCH/REPLACE* blocks will replace *all* matching occurrences.
+    Include enough lines to make the SEARCH blocks uniquely match the lines to change.
 
-    def __init__(self, *args, **kwargs):
-        self.gpt_prompts = EditBlockPrompts()
-        super().__init__(*args, **kwargs)
+    Keep *SEARCH/REPLACE* blocks concise.
+    Break large *SEARCH/REPLACE* blocks into a series of smaller blocks that each change a small portion of the file.
+    Include just the changing lines, and a few surrounding lines if needed for uniqueness.
+    Do not include long runs of unchanging lines in *SEARCH/REPLACE* blocks.
+
+    Only create *SEARCH/REPLACE* blocks for files that the user has added to the chat!
+
+    To move content within a file, use 2 *SEARCH/REPLACE* blocks: 1 to delete it from its current location, 1 to insert it in the new location.
+
+    If you want to put content in a new file, use a *SEARCH/REPLACE block* with:
+    - A new file path, including dir name if needed
+    - An empty `SEARCH` section
+    - The new file's contents in the `REPLACE` section
+
+    {lazy_prompt}
+    ONLY EVER RETURN CODE/CONTENT IN A *SEARCH/REPLACE BLOCK*!
+    """
+    
+    def format_file_diff(self, file_path, file_language, original_full=None, updated_full=None, chunks=None):
+        # no need to use original_full and updated_full for this format
+        formatted_chunks = []
+        
+        for chunk_original, chunk_updated in chunks:
+            original = chunk_original + "\n" if chunk_original else ""
+            updated = chunk_updated + "\n" if chunk_updated else ""
+            
+            formatted_chunk = f"""{file_path}
+{{fence[0]}}{file_language}
+<<<<<<< SEARCH
+{original}=======
+{updated}>>>>>>> REPLACE
+{{fence[1]}}"""
+        
+            formatted_chunks.append(formatted_chunk)
+        
+        return "\n\n".join(formatted_chunks)
 
     def get_edits(self):
-        content = self.partial_response_content
+        content = self.agent.partial_response_content
 
         # might raise ValueError for malformed ORIG/UPD blocks
-        edits = list(find_original_update_blocks(content, self.fence))
+        edits = list(find_original_update_blocks(content, self.agent.fence))
 
         return edits
 
@@ -32,19 +88,19 @@ class EditBlockCoder(Coder):
         passed = []
         for edit in edits:
             path, original, updated = edit
-            full_path = self.abs_root_path(path)
-            content = self.io.read_text(full_path)
-            new_content = do_replace(full_path, content, original, updated, self.fence)
+            full_path = self.agent.abs_root_path(path)
+            content = self.agent.io.read_text(full_path)
+            new_content = do_replace(full_path, content, original, updated, self.agent.fence)
             if not new_content:
                 # try patching any of the other files in the chat
-                for full_path in self.abs_fnames:
-                    content = self.io.read_text(full_path)
-                    new_content = do_replace(full_path, content, original, updated, self.fence)
+                for full_path in self.agent.abs_fnames:
+                    content = self.agent.io.read_text(full_path)
+                    new_content = do_replace(full_path, content, original, updated, self.agent.fence)
                     if new_content:
                         break
 
             if new_content:
-                self.io.write_text(full_path, new_content)
+                self.agent.io.write_text(full_path, new_content)
                 passed.append(edit)
             else:
                 failed.append(edit)
@@ -58,8 +114,8 @@ class EditBlockCoder(Coder):
         for edit in failed:
             path, original, updated = edit
 
-            full_path = self.abs_root_path(path)
-            content = self.io.read_text(full_path)
+            full_path = self.agent.abs_root_path(path)
+            content = self.agent.io.read_text(full_path)
 
             res += f"""
 ## SearchReplaceNoExactMatch: This SEARCH block failed to exactly match lines in {path}
@@ -72,9 +128,9 @@ class EditBlockCoder(Coder):
             if did_you_mean:
                 res += f"""Did you mean to match some of these actual lines from {path}?
 
-{self.fence[0]}
+{self.agent.fence[0]}
 {did_you_mean}
-{self.fence[1]}
+{self.agent.fence[1]}
 
 """
 
@@ -95,7 +151,6 @@ Don't re-send them.
 Just reply with fixed versions of the {blocks} above that failed to match.
 """
         raise ValueError(res)
-
 
 def prep(content):
     if content and not content.endswith("\n"):
@@ -158,6 +213,8 @@ def replace_most_similar_chunk(whole, part, replace):
     res = replace_closest_edit_distance(whole_lines, part, part_lines, replace_lines)
     if res:
         return res
+    
+
 
 
 def try_dotdotdots(whole, part, replace):
