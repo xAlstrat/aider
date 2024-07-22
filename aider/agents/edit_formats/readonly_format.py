@@ -1,7 +1,7 @@
 from .base_format import BaseDiffFormat
 
-class NoEditsDiffFormat(BaseDiffFormat):
-    id = "NO_EDITS"
+class ReadonlyDiffFormat(BaseDiffFormat):
+    id = "readonly"
     
     diff_format_instructions = "You can propose file edits in the chat but you can't make any edits directly."
     system_reminder = ""

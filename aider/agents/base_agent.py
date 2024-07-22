@@ -77,10 +77,10 @@ class Agent:
         self,
         main_model=None,
         edit_format=None,
-        agent_type=None,
         io=None,
         from_coder=None,
         summarize_from_coder=True,
+        agent_type='coder',
         **kwargs,
     ):
         from . import (
@@ -93,7 +93,8 @@ class Agent:
         from .edit_formats import (
             EditBlockDiffFormat,
             EditBlockFencedDiffFormat,
-            WholeDiffFormat
+            WholeDiffFormat,
+            ReadonlyDiffFormat
         )
 
         if not main_model:
@@ -107,6 +108,8 @@ class Agent:
                 edit_format = from_coder.edit_format
             else:
                 edit_format = main_model.edit_format
+                
+            print(f"Using edit format: {edit_format}")
                 
         if agent_type is None:
             if from_coder:
@@ -162,6 +165,8 @@ class Agent:
             diff_format = WholeDiffFormat()
         elif edit_format == "udiff":
             diff_format = UnifiedDiffCoder()
+        elif edit_format == 'readonly':
+            diff_format = ReadonlyDiffFormat()
         else:
             raise ValueError(f"Unknown edit format {edit_format}")
         
@@ -283,7 +288,8 @@ class Agent:
             self.aider_commit_hashes = set()
             
         self.diff_format = diff_format
-        self.diff_format.agent = self
+        if self.diff_format:
+            self.diff_format.agent = self
 
         self.chat_completion_call_hashes = []
         self.chat_completion_response_hashes = []

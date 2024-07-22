@@ -20,7 +20,7 @@ class TestHelp(unittest.TestCase):
         commands = Commands(io, coder)
 
         help_coder_run = MagicMock(return_value="")
-        aider.coders.HelpCoder.run = help_coder_run
+        aider.agents.HelpAgent.run = help_coder_run
 
         commands.cmd_help("hi")
 

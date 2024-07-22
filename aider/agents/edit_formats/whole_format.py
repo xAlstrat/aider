@@ -5,8 +5,7 @@ from .base_format import BaseDiffFormat
 from ...dump import dump  # noqa: F401
 
 class WholeDiffFormat(BaseDiffFormat):
-    id = "WHOLE_FILE"
-    name = "WHILE FILE block"
+    id = "whole"
     
     diff_format_instructions = """Once you understand the request you MUST:
 1. Determine if any code changes are needed.

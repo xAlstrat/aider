@@ -1,7 +1,7 @@
 from . import EditBlockDiffFormat
 
 class EditBlockFencedDiffFormat(EditBlockDiffFormat):
-    id = "EDIT_BLOCK_FENCED"
+    id = "edit_block_fenced"
     
     def format_file_diff(self, file_path, file_language, original_full=None, updated_full=None, chunks=None):
         # no need to use original_full and updated_full for this format

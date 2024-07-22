@@ -10,8 +10,7 @@ from .base_format import BaseDiffFormat
 from ...dump import dump  # noqa: F401
 
 class EditBlockDiffFormat(BaseDiffFormat):
-    id = "EDIT_BLOCK"
-    name = "SEARCH/REPLACE block"
+    id = "edit_block"
     
     diff_format_instructions = """Once you done with the request you MUST:
 1. Decide if you need to propose *SEARCH/REPLACE* edits to any files that haven't been added to the chat. You can create new files without asking. But if you need to propose edits to existing files not already added to the chat, you *MUST* tell the user their full path names and ask them to *add the files to the chat*. End your reply and wait for their approval. You can keep asking if you then decide you need to edit more files.

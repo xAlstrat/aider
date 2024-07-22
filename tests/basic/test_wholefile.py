@@ -5,8 +5,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from aider.agents import Agent
+from aider.agents import Agent, CoderAgent
 from aider.agents.wholefile_coder import WholeFileCoder
+from aider.agents.edit_formats import WholeDiffFormat
 from aider.dump import dump  # noqa: F401
 from aider.io import InputOutput
 from aider.models import Model
@@ -25,10 +26,10 @@ class TestWholeFileCoder(unittest.TestCase):
         shutil.rmtree(self.tempdir, ignore_errors=True)
 
     def test_no_files(self):
-        # Initialize WholeFileCoder with the temporary directory
+        # Initialize CoderAgent with the temporary directory
         io = InputOutput(yes=True)
 
-        coder = WholeFileCoder(main_model=self.GPT35, io=io, fnames=[])
+        coder = CoderAgent(main_model=self.GPT35, io=io, fnames=[], diff_format=WholeDiffFormat())
         coder.partial_response_content = (
             'To print "Hello, World!" in most programming languages, you can use the following'
             ' code:\n\n```python\nprint("Hello, World!")\n```\n\nThis code will output "Hello,'
@@ -40,7 +41,7 @@ class TestWholeFileCoder(unittest.TestCase):
 
     def test_no_files_new_file_should_ask(self):
         io = InputOutput(yes=False)  # <- yes=FALSE
-        coder = WholeFileCoder(main_model=self.GPT35, io=io, fnames=[])
+        coder = CoderAgent(main_model=self.GPT35, io=io, fnames=[], diff_format=WholeDiffFormat())
         coder.partial_response_content = (
             'To print "Hello, World!" in most programming languages, you can use the following'
             ' code:\n\nfoo.js\n```python\nprint("Hello, World!")\n```\n\nThis code will output'
@@ -55,9 +56,9 @@ class TestWholeFileCoder(unittest.TestCase):
         with open(sample_file, "w") as f:
             f.write("Original content\n")
 
-        # Initialize WholeFileCoder with the temporary directory
+        # Initialize CoderAgent with the temporary directory
         io = InputOutput(yes=True)
-        coder = WholeFileCoder(main_model=self.GPT35, io=io, fnames=[sample_file])
+        coder = CoderAgent(main_model=self.GPT35, io=io, fnames=[sample_file], diff_format=WholeDiffFormat())
 
         # Set the partial response content with the updated content
         coder.partial_response_content = f"{sample_file}\n```\nUpdated content\n```"
@@ -79,14 +80,14 @@ class TestWholeFileCoder(unittest.TestCase):
         with open(sample_file, "w") as f:
             f.write("\n".join(map(str, range(0, 100))))
 
-        # Initialize WholeFileCoder with the temporary directory
+        # Initialize CoderAgent with the temporary directory
         io = InputOutput(yes=True)
-        coder = WholeFileCoder(main_model=self.GPT35, io=io, fnames=[sample_file])
+        coder = CoderAgent(main_model=self.GPT35, io=io, fnames=[sample_file], diff_format=WholeDiffFormat())
 
         # Set the partial response content with the updated content
         coder.partial_response_content = f"{sample_file}\n```\n0\n\1\n2\n"
 
-        lines = coder.get_edits(mode="diff").splitlines()
+        lines = coder.diff_format.get_edits(mode="diff").splitlines()
 
         # the live diff should be concise, since we haven't changed anything yet
         self.assertLess(len(lines), 20)
@@ -103,9 +104,9 @@ Quote!
         with open(sample_file, "w") as f:
             f.write(original_content)
 
-        # Initialize WholeFileCoder with the temporary directory
+        # Initialize CoderAgent with the temporary directory
         io = InputOutput(yes=True)
-        coder = WholeFileCoder(main_model=self.GPT35, io=io, fnames=[sample_file])
+        coder = CoderAgent(main_model=self.GPT35, io=io, fnames=[sample_file], diff_format=WholeDiffFormat())
 
         coder.choose_fence()
 
@@ -133,9 +134,9 @@ Quote!
         with open(sample_file, "w") as f:
             f.write("Original content\n")
 
-        # Initialize WholeFileCoder with the temporary directory
+        # Initialize CoderAgent with the temporary directory
         io = InputOutput(yes=True)
-        coder = WholeFileCoder(main_model=self.GPT35, io=io, fnames=[sample_file])
+        coder = CoderAgent(main_model=self.GPT35, io=io, fnames=[sample_file], diff_format=WholeDiffFormat())
 
         # Set the partial response content with the updated content
         # With path/to/ prepended onto the filename
@@ -158,9 +159,9 @@ Quote!
         with open(sample_file, "w") as f:
             f.write("Original content\n")
 
-        # Initialize WholeFileCoder with the temporary directory
+        # Initialize CoderAgent with the temporary directory
         io = InputOutput(yes=True)
-        coder = WholeFileCoder(main_model=self.GPT35, io=io)
+        coder = CoderAgent(main_model=self.GPT35, io=io, diff_format=WholeDiffFormat())
 
         # Set the partial response content with the updated content
         coder.partial_response_content = f"{sample_file}\n```\nUpdated content\n```"
@@ -186,9 +187,9 @@ Quote!
         with open(sample_file, "w") as f:
             f.write("Original content\n")
 
-        # Initialize WholeFileCoder with the temporary directory
+        # Initialize CoderAgent with the temporary directory
         io = InputOutput(yes=True)
-        coder = WholeFileCoder(main_model=self.GPT35, io=io, fnames=[sample_file])
+        coder = CoderAgent(main_model=self.GPT35, io=io, fnames=[sample_file], diff_format=WholeDiffFormat())
 
         # Set the partial response content with the updated content
         coder.partial_response_content = (
@@ -229,9 +230,9 @@ And here is `b.txt`:
 after b
 ```
 """
-        # Initialize WholeFileCoder with the temporary directory
+        # Initialize CoderAgent with the temporary directory
         io = InputOutput(yes=True)
-        coder = WholeFileCoder(main_model=self.GPT35, io=io, fnames=[fname_a, fname_b])
+        coder = CoderAgent(main_model=self.GPT35, io=io, fnames=[fname_a, fname_b], diff_format=WholeDiffFormat())
 
         # Set the partial response content with the updated content
         coder.partial_response_content = response
@@ -253,9 +254,9 @@ after b
         with open(sample_file, "w") as f:
             f.write("Original content\n")
 
-        # Initialize WholeFileCoder with the temporary directory
+        # Initialize CoderAgent with the temporary directory
         io = InputOutput(yes=True)
-        coder = WholeFileCoder(main_model=self.GPT35, io=io, fnames=[sample_file])
+        coder = CoderAgent(main_model=self.GPT35, io=io, fnames=[sample_file], diff_format=WholeDiffFormat())
 
         # Set the partial response content with the updated content
         coder.partial_response_content = (
