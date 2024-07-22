@@ -9,7 +9,7 @@ from unittest import TestCase
 
 import git
 
-from aider.coders import Coder
+from aider.agents import Agent
 from aider.commands import Commands
 from aider.dump import dump  # noqa: F401
 from aider.io import InputOutput
@@ -32,9 +32,9 @@ class TestCommands(TestCase):
     def test_cmd_add(self):
         # Initialize the Commands and InputOutput objects
         io = InputOutput(pretty=False, yes=True)
-        from aider.coders import Coder
+        from aider.agents import Agent
 
-        coder = Coder.create(self.GPT35, None, io)
+        coder = Agent.create(self.GPT35, None, io)
         commands = Commands(io, coder)
 
         # Call the cmd_add method with 'foo.txt' and 'bar.txt' as a single string
@@ -48,9 +48,9 @@ class TestCommands(TestCase):
         # https://github.com/paul-gauthier/aider/issues/293
 
         io = InputOutput(pretty=False, yes=False)
-        from aider.coders import Coder
+        from aider.agents import Agent
 
-        coder = Coder.create(self.GPT35, None, io)
+        coder = Agent.create(self.GPT35, None, io)
         commands = Commands(io, coder)
 
         commands.cmd_add("**.txt")
@@ -58,9 +58,9 @@ class TestCommands(TestCase):
     def test_cmd_add_with_glob_patterns(self):
         # Initialize the Commands and InputOutput objects
         io = InputOutput(pretty=False, yes=True)
-        from aider.coders import Coder
+        from aider.agents import Agent
 
-        coder = Coder.create(self.GPT35, None, io)
+        coder = Agent.create(self.GPT35, None, io)
         commands = Commands(io, coder)
 
         # Create some test files
@@ -84,9 +84,9 @@ class TestCommands(TestCase):
     def test_cmd_add_no_match(self):
         # yes=False means we will *not* create the file when it is not found
         io = InputOutput(pretty=False, yes=False)
-        from aider.coders import Coder
+        from aider.agents import Agent
 
-        coder = Coder.create(self.GPT35, None, io)
+        coder = Agent.create(self.GPT35, None, io)
         commands = Commands(io, coder)
 
         # Call the cmd_add method with a non-existent file pattern
@@ -98,9 +98,9 @@ class TestCommands(TestCase):
     def test_cmd_add_no_match_but_make_it(self):
         # yes=True means we *will* create the file when it is not found
         io = InputOutput(pretty=False, yes=True)
-        from aider.coders import Coder
+        from aider.agents import Agent
 
-        coder = Coder.create(self.GPT35, None, io)
+        coder = Agent.create(self.GPT35, None, io)
         commands = Commands(io, coder)
 
         fname = Path("[abc].nonexistent")
@@ -115,9 +115,9 @@ class TestCommands(TestCase):
     def test_cmd_add_drop_directory(self):
         # Initialize the Commands and InputOutput objects
         io = InputOutput(pretty=False, yes=False)
-        from aider.coders import Coder
+        from aider.agents import Agent
 
-        coder = Coder.create(self.GPT35, None, io)
+        coder = Agent.create(self.GPT35, None, io)
         commands = Commands(io, coder)
 
         # Create a directory and add files to it using pathlib
@@ -166,9 +166,9 @@ class TestCommands(TestCase):
     def test_cmd_drop_with_glob_patterns(self):
         # Initialize the Commands and InputOutput objects
         io = InputOutput(pretty=False, yes=True)
-        from aider.coders import Coder
+        from aider.agents import Agent
 
-        coder = Coder.create(self.GPT35, None, io)
+        coder = Agent.create(self.GPT35, None, io)
         commands = Commands(io, coder)
 
         subdir = Path("subdir")
@@ -193,9 +193,9 @@ class TestCommands(TestCase):
     def test_cmd_add_bad_encoding(self):
         # Initialize the Commands and InputOutput objects
         io = InputOutput(pretty=False, yes=True)
-        from aider.coders import Coder
+        from aider.agents import Agent
 
-        coder = Coder.create(self.GPT35, None, io)
+        coder = Agent.create(self.GPT35, None, io)
         commands = Commands(io, coder)
 
         # Create a new file foo.bad which will fail to decode as utf-8
@@ -215,7 +215,7 @@ class TestCommands(TestCase):
             with open(f"{tempdir}/test.txt", "w") as f:
                 f.write("test")
 
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
             commands = Commands(io, coder)
 
             # Run the cmd_git method with the arguments "commit -a -m msg"
@@ -231,7 +231,7 @@ class TestCommands(TestCase):
         # Initialize the Commands and InputOutput objects
         io = InputOutput(pretty=False, yes=True)
 
-        coder = Coder.create(self.GPT35, None, io)
+        coder = Agent.create(self.GPT35, None, io)
         commands = Commands(io, coder)
 
         commands.cmd_add("foo.txt bar.txt")
@@ -272,7 +272,7 @@ class TestCommands(TestCase):
         os.chdir("subdir")
 
         io = InputOutput(pretty=False, yes=True)
-        coder = Coder.create(self.GPT35, None, io)
+        coder = Agent.create(self.GPT35, None, io)
         commands = Commands(io, coder)
 
         # this should get added
@@ -288,9 +288,9 @@ class TestCommands(TestCase):
     def test_cmd_add_from_subdir_again(self):
         with GitTemporaryDirectory():
             io = InputOutput(pretty=False, yes=False)
-            from aider.coders import Coder
+            from aider.agents import Agent
 
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
             commands = Commands(io, coder)
 
             Path("side_dir").mkdir()
@@ -314,7 +314,7 @@ class TestCommands(TestCase):
             repo.git.commit("-m", "initial")
 
             io = InputOutput(pretty=False, yes=True)
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
             commands = Commands(io, coder)
 
             self.assertFalse(repo.is_dirty())
@@ -333,9 +333,9 @@ class TestCommands(TestCase):
             os.chdir(str(root))
 
             io = InputOutput(pretty=False, yes=False)
-            from aider.coders import Coder
+            from aider.agents import Agent
 
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
             commands = Commands(io, coder)
 
             outside_file = Path(tmp_dname) / "outside.txt"
@@ -356,9 +356,9 @@ class TestCommands(TestCase):
             make_repo()
 
             io = InputOutput(pretty=False, yes=False)
-            from aider.coders import Coder
+            from aider.agents import Agent
 
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
             commands = Commands(io, coder)
 
             outside_file = Path(tmp_dname) / "outside.txt"
@@ -374,9 +374,9 @@ class TestCommands(TestCase):
     def test_cmd_add_filename_with_special_chars(self):
         with ChdirTemporaryDirectory():
             io = InputOutput(pretty=False, yes=False)
-            from aider.coders import Coder
+            from aider.agents import Agent
 
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
             commands = Commands(io, coder)
 
             fname = Path("with[brackets].txt")
@@ -399,9 +399,9 @@ class TestCommands(TestCase):
             repo.git.commit("-m", "Initial commit")
 
             io = InputOutput(pretty=False, yes=False)
-            from aider.coders import Coder
+            from aider.agents import Agent
 
-            coder = Coder.create(Model("claude-3-5-sonnet-20240620"), None, io)
+            coder = Agent.create(Model("claude-3-5-sonnet-20240620"), None, io)
             print(coder.get_announcements())
             commands = Commands(io, coder)
 
@@ -439,9 +439,9 @@ class TestCommands(TestCase):
     def test_cmd_add_dirname_with_special_chars(self):
         with ChdirTemporaryDirectory():
             io = InputOutput(pretty=False, yes=False)
-            from aider.coders import Coder
+            from aider.agents import Agent
 
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
             commands = Commands(io, coder)
 
             dname = Path("with[brackets]")
@@ -456,9 +456,9 @@ class TestCommands(TestCase):
     def test_cmd_add_abs_filename(self):
         with ChdirTemporaryDirectory():
             io = InputOutput(pretty=False, yes=False)
-            from aider.coders import Coder
+            from aider.agents import Agent
 
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
             commands = Commands(io, coder)
 
             fname = Path("file.txt")
@@ -471,9 +471,9 @@ class TestCommands(TestCase):
     def test_cmd_add_quoted_filename(self):
         with ChdirTemporaryDirectory():
             io = InputOutput(pretty=False, yes=False)
-            from aider.coders import Coder
+            from aider.agents import Agent
 
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
             commands = Commands(io, coder)
 
             fname = Path("file with spaces.txt")
@@ -499,9 +499,9 @@ class TestCommands(TestCase):
             repo.git.rm("one.txt")
 
             io = InputOutput(pretty=False, yes=True)
-            from aider.coders import Coder
+            from aider.agents import Agent
 
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
             commands = Commands(io, coder)
 
             # There's no reason this /add should trigger a commit
@@ -522,9 +522,9 @@ class TestCommands(TestCase):
     def test_cmd_add_unicode_error(self):
         # Initialize the Commands and InputOutput objects
         io = InputOutput(pretty=False, yes=True)
-        from aider.coders import Coder
+        from aider.agents import Agent
 
-        coder = Coder.create(self.GPT35, None, io)
+        coder = Agent.create(self.GPT35, None, io)
         commands = Commands(io, coder)
 
         fname = "file.txt"
@@ -541,9 +541,9 @@ class TestCommands(TestCase):
             repo = git.Repo()
 
             io = InputOutput(pretty=False, yes=False)
-            from aider.coders import Coder
+            from aider.agents import Agent
 
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
             commands = Commands(io, coder)
 
             fname = Path("test.txt")
@@ -566,7 +566,7 @@ class TestCommands(TestCase):
         with GitTemporaryDirectory() as repo_dir:
             repo = git.Repo(repo_dir)
             io = InputOutput(pretty=False, yes=True)
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
             commands = Commands(io, coder)
 
             other_path = Path(repo_dir) / "other_file.txt"
@@ -614,7 +614,7 @@ class TestCommands(TestCase):
         with GitTemporaryDirectory() as repo_dir:
             repo = git.Repo(repo_dir)
             io = InputOutput(pretty=False, yes=True)
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
             commands = Commands(io, coder)
 
             # Put in a random first commit
@@ -650,7 +650,7 @@ class TestCommands(TestCase):
         with GitTemporaryDirectory() as repo_dir:
             repo = git.Repo(repo_dir)
             io = InputOutput(pretty=False, yes=True)
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
             commands = Commands(io, coder)
 
             # Create and commit a new file
@@ -691,7 +691,7 @@ class TestCommands(TestCase):
             aignore.write_text(f"{fname1}\n{fname2}\ndir\n")
 
             io = InputOutput(yes=True)
-            coder = Coder.create(
+            coder = Agent.create(
                 self.GPT35, None, io, fnames=[fname1, fname2], aider_ignore_file=str(aignore)
             )
             commands = Commands(io, coder)

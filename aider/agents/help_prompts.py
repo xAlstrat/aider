@@ -1,9 +1,9 @@
 # flake8: noqa: E501
 
-from .base_prompts import CoderPrompts
+from .base_prompts import AgentPrompts
 
 
-class HelpPrompts(CoderPrompts):
+class HelpPrompts(AgentPrompts):
     main_system = """You are an expert on the AI coding tool called Aider.
 Answer the user's questions about how to use aider.
 
@@ -31,7 +31,6 @@ Keep this info about the user's system in mind:
 """
 
     example_messages = []
-    system_reminder = ""
 
     files_content_prefix = """These are some files we have been discussing that we may want to edit after you answer my questions:
 """

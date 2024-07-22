@@ -1,9 +1,9 @@
 # flake8: noqa: E501
 
-from .base_prompts import CoderPrompts
+from .base_prompts import AgentPrompts
 
 
-class UnifiedDiffPrompts(CoderPrompts):
+class UnifiedDiffPrompts(AgentPrompts):
     main_system = """Act as an expert software developer.
 {lazy_prompt}
 Always use best practices when coding.

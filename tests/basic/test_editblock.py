@@ -5,8 +5,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from aider.coders import Coder
-from aider.coders import editblock_coder as eb
+from aider.agents import Agent
+from aider.agents import coder_agent as eb
 from aider.dump import dump  # noqa: F401
 from aider.io import InputOutput
 from aider.models import Model
@@ -297,7 +297,7 @@ These changes replace the `subprocess.run` patches with `subprocess.check_output
         files = [file1]
 
         # Initialize the Coder object with the mocked IO and mocked repo
-        coder = Coder.create(self.GPT35, "diff", io=InputOutput(), fnames=files, pretty=False)
+        coder = Agent.create(self.GPT35, "diff", io=InputOutput(), fnames=files, pretty=False)
 
         def mock_send(*args, **kwargs):
             coder.partial_response_content = f"""
@@ -334,7 +334,7 @@ new
         files = [file1]
 
         # Initialize the Coder object with the mocked IO and mocked repo
-        coder = Coder.create(
+        coder = Agent.create(
             self.GPT35,
             "diff",
             io=InputOutput(dry_run=True),

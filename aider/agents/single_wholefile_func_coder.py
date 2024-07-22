@@ -1,18 +1,18 @@
 from aider import diffs
 
 from ..dump import dump  # noqa: F401
-from .base_coder import Coder
-from .wholefile_func_prompts import WholeFileFunctionPrompts
+from .base_agent import Agent
+from .single_wholefile_func_prompts import SingleWholeFileFunctionPrompts
 
 
-class WholeFileFunctionCoder(Coder):
+class SingleWholeFileFunctionCoder(Agent):
     functions = [
         dict(
             name="write_file",
-            description="create or update one or more files",
+            description="write new content into the file",
             parameters=dict(
                 type="object",
-                required=["explanation", "files"],
+                required=["explanation", "content"],
                 properties=dict(
                     explanation=dict(
                         type="string",
@@ -21,22 +21,9 @@ class WholeFileFunctionCoder(Coder):
                             " tense, markdown format)"
                         ),
                     ),
-                    files=dict(
-                        type="array",
-                        items=dict(
-                            type="object",
-                            required=["path", "content"],
-                            properties=dict(
-                                path=dict(
-                                    type="string",
-                                    description="Path of file to write",
-                                ),
-                                content=dict(
-                                    type="string",
-                                    description="Content to write to the file",
-                                ),
-                            ),
-                        ),
+                    content=dict(
+                        type="string",
+                        description="Content to write to the file",
                     ),
                 ),
             ),
@@ -44,9 +31,8 @@ class WholeFileFunctionCoder(Coder):
     ]
 
     def __init__(self, *args, **kwargs):
-        raise RuntimeError("Deprecated, needs to be refactored to support get_edits/apply_edits")
-
-        self.gpt_prompts = WholeFileFunctionPrompts()
+        raise RuntimeError("Deprecated, needs to be refactored into a edit_format module used throught CoderAgent")
+        self.gpt_prompts = SingleWholeFileFunctionPrompts()
         super().__init__(*args, **kwargs)
 
     def update_cur_messages(self, edited):
@@ -62,6 +48,8 @@ class WholeFileFunctionCoder(Coder):
             return self.partial_response_content
 
         args = self.parse_partial_args()
+
+        return str(args)
 
         if not args:
             return
@@ -116,19 +104,9 @@ class WholeFileFunctionCoder(Coder):
         if not args:
             return
 
-        files = args.get("files", [])
+        content = args["content"]
+        path = self.get_inchat_relative_files()[0]
+        if self.allowed_to_edit(path, content):
+            return set([path])
 
-        edited = set()
-        for file_upd in files:
-            path = file_upd.get("path")
-            if not path:
-                raise ValueError(f"Missing path parameter: {file_upd}")
-
-            content = file_upd.get("content")
-            if not content:
-                raise ValueError(f"Missing content parameter: {file_upd}")
-
-            if self.allowed_to_edit(path, content):
-                edited.add(path)
-
-        return edited
+        return set()

@@ -217,12 +217,12 @@ class Commands:
 
         # system messages
         main_sys = self.coder.fmt_system_prompt(self.coder.gpt_prompts.main_system)
-        main_sys += "\n" + self.coder.fmt_system_prompt(self.coder.gpt_prompts.system_reminder)
+        main_sys += "\n" + self.coder.fmt_system_prompt(self.coder.diff_format.system_reminder)
         msgs = [
             dict(role="system", content=main_sys),
             dict(
                 role="system",
-                content=self.coder.fmt_system_prompt(self.coder.gpt_prompts.system_reminder),
+                content=self.coder.fmt_system_prompt(self.coder.diff_format.system_reminder),
             ),
         ]
 
@@ -672,7 +672,7 @@ class Commands:
             self.basic_help()
             return
 
-        from aider.coders import Coder
+        from aider.agents import Agent
 
         if not self.help:
             res = install_help_extra(self.io)
@@ -682,11 +682,12 @@ class Commands:
 
             self.help = Help()
 
-        coder = Coder.create(
+        coder = Agent.create(
             main_model=self.coder.main_model,
             io=self.io,
             from_coder=self.coder,
-            edit_format="help",
+            agent_type="help",
+            edit_format='readonly',
             summarize_from_coder=False,
             map_tokens=512,
             map_mul_no_files=1,
@@ -791,10 +792,10 @@ def parse_quoted_filenames(args):
 
 
 def get_help_md():
-    from aider.coders import Coder
+    from aider.agents import Agent
     from aider.models import Model
 
-    coder = Coder(Model("gpt-3.5-turbo"), None)
+    coder = Agent(Model("gpt-3.5-turbo"), None)
     md = coder.commands.get_help_md()
     return md
 

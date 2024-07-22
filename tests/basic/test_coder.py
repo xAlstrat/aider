@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import git
 
-from aider.coders import Coder
+from aider.agents import Agent
 from aider.dump import dump  # noqa: F401
 from aider.io import InputOutput
 from aider.models import Model
@@ -32,7 +32,7 @@ class TestCoder(unittest.TestCase):
 
             # YES!
             io = InputOutput(yes=True)
-            coder = Coder.create(self.GPT35, None, io, fnames=["added.txt"])
+            coder = Agent.create(self.GPT35, None, io, fnames=["added.txt"])
 
             self.assertTrue(coder.allowed_to_edit("added.txt"))
             self.assertTrue(coder.allowed_to_edit("repo.txt"))
@@ -60,7 +60,7 @@ class TestCoder(unittest.TestCase):
             # say NO
             io = InputOutput(yes=False)
 
-            coder = Coder.create(self.GPT35, None, io, fnames=["added.txt"])
+            coder = Agent.create(self.GPT35, None, io, fnames=["added.txt"])
 
             self.assertTrue(coder.allowed_to_edit("added.txt"))
             self.assertFalse(coder.allowed_to_edit("repo.txt"))
@@ -84,7 +84,7 @@ class TestCoder(unittest.TestCase):
             # say NO
             io = InputOutput(yes=False)
 
-            coder = Coder.create(self.GPT35, None, io, fnames=["added.txt"])
+            coder = Agent.create(self.GPT35, None, io, fnames=["added.txt"])
 
             self.assertTrue(coder.allowed_to_edit("added.txt"))
             self.assertFalse(coder.need_commit_before_edits)
@@ -105,7 +105,7 @@ class TestCoder(unittest.TestCase):
             repo.git.commit("-m", "new")
 
             # Initialize the Coder object with the mocked IO and mocked repo
-            coder = Coder.create(self.GPT35, None, mock_io)
+            coder = Agent.create(self.GPT35, None, mock_io)
 
             mod = coder.get_last_modified()
 
@@ -128,7 +128,7 @@ class TestCoder(unittest.TestCase):
         files = [file1, file2]
 
         # Initialize the Coder object with the mocked IO and mocked repo
-        coder = Coder.create(self.GPT35, None, io=InputOutput(), fnames=files)
+        coder = Agent.create(self.GPT35, None, io=InputOutput(), fnames=files)
 
         content = coder.get_files_content().splitlines()
         self.assertIn("file1.txt", content)
@@ -151,7 +151,7 @@ class TestCoder(unittest.TestCase):
             repo.git.commit("-m", "new")
 
             # Initialize the Coder object with the mocked IO and mocked repo
-            coder = Coder.create(self.GPT35, None, mock_io)
+            coder = Agent.create(self.GPT35, None, mock_io)
 
             # Call the check_for_file_mentions method
             coder.check_for_file_mentions("Please check file1.txt and file2.py")
@@ -169,7 +169,7 @@ class TestCoder(unittest.TestCase):
     def test_check_for_ambiguous_filename_mentions_of_longer_paths(self):
         with GitTemporaryDirectory():
             io = InputOutput(pretty=False, yes=True)
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
 
             fname = Path("file1.txt")
             fname.touch()
@@ -190,7 +190,7 @@ class TestCoder(unittest.TestCase):
     def test_check_for_subdir_mention(self):
         with GitTemporaryDirectory():
             io = InputOutput(pretty=False, yes=True)
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
 
             fname = Path("other") / "file1.txt"
             fname.parent.mkdir(parents=True, exist_ok=True)
@@ -208,7 +208,7 @@ class TestCoder(unittest.TestCase):
     def test_get_file_mentions_path_formats(self):
         with GitTemporaryDirectory():
             io = InputOutput(pretty=False, yes=True)
-            coder = Coder.create(self.GPT35, None, io)
+            coder = Agent.create(self.GPT35, None, io)
 
             # Test cases with different path formats
             test_cases = [
@@ -257,7 +257,7 @@ class TestCoder(unittest.TestCase):
         files = [file1, file2]
 
         # Initialize the Coder object with the mocked IO and mocked repo
-        coder = Coder.create(self.GPT35, None, io=InputOutput(), fnames=files, pretty=False)
+        coder = Agent.create(self.GPT35, None, io=InputOutput(), fnames=files, pretty=False)
 
         def mock_send(*args, **kwargs):
             coder.partial_response_content = "ok"
@@ -284,7 +284,7 @@ class TestCoder(unittest.TestCase):
         files = [file1, file2]
 
         # Initialize the Coder object with the mocked IO and mocked repo
-        coder = Coder.create(self.GPT35, None, io=InputOutput(), fnames=files, pretty=False)
+        coder = Agent.create(self.GPT35, None, io=InputOutput(), fnames=files, pretty=False)
 
         def mock_send(*args, **kwargs):
             coder.partial_response_content = "ok"
@@ -315,7 +315,7 @@ class TestCoder(unittest.TestCase):
         files = [file1]
 
         # Initialize the Coder object with the mocked IO and mocked repo
-        coder = Coder.create(self.GPT35, None, io=InputOutput(), fnames=files)
+        coder = Agent.create(self.GPT35, None, io=InputOutput(), fnames=files)
 
         def mock_send(*args, **kwargs):
             coder.partial_response_content = "ok"
@@ -340,7 +340,7 @@ class TestCoder(unittest.TestCase):
         encoding = "utf-16"
 
         # Initialize the Coder object with the mocked IO and mocked repo
-        coder = Coder.create(
+        coder = Agent.create(
             self.GPT35,
             None,
             io=InputOutput(encoding=encoding),
@@ -375,7 +375,7 @@ class TestCoder(unittest.TestCase):
             fname = Path("file.txt")
 
             io = InputOutput(yes=True)
-            coder = Coder.create(self.GPT35, "diff", io=io, fnames=[str(fname)], pretty=False)
+            coder = Agent.create(self.GPT35, "diff", io=io, fnames=[str(fname)], pretty=False)
 
             self.assertTrue(fname.exists())
 
@@ -432,7 +432,7 @@ new
             fname1.write_text("ONE\n")
 
             io = InputOutput(yes=True)
-            coder = Coder.create(
+            coder = Agent.create(
                 self.GPT35, "diff", io=io, fnames=[str(fname1), str(fname2)], pretty=False
             )
 
@@ -487,7 +487,7 @@ TWO
             fname2.write_text("OTHER\n")
 
             io = InputOutput(yes=True)
-            coder = Coder.create(self.GPT35, "diff", io=io, fnames=[str(fname)], pretty=False)
+            coder = Agent.create(self.GPT35, "diff", io=io, fnames=[str(fname)], pretty=False)
 
             def mock_send(*args, **kwargs):
                 coder.partial_response_content = f"""
@@ -565,7 +565,7 @@ three
             repo.git.commit("-m", "initial")
 
             io = InputOutput(yes=True)
-            coder = Coder.create(self.GPT35, "diff", io=io, fnames=[str(fname)], pretty=False)
+            coder = Agent.create(self.GPT35, "diff", io=io, fnames=[str(fname)], pretty=False)
 
             def mock_send(*args, **kwargs):
                 coder.partial_response_content = f"""
@@ -615,7 +615,7 @@ two
             aignore.write_text(f"{fname1}\n{fname2}\ndir\n")
 
             io = InputOutput(yes=True)
-            coder = Coder.create(
+            coder = Agent.create(
                 self.GPT35,
                 None,
                 io,
@@ -629,7 +629,7 @@ two
 
     def test_check_for_urls(self):
         io = InputOutput(yes=True)
-        coder = Coder.create(self.GPT35, None, io=io, pretty=False)
+        coder = Agent.create(self.GPT35, None, io=io, pretty=False)
         coder.commands.scraper = MagicMock()
         coder.commands.scraper.scrape = MagicMock(return_value="some content")
 

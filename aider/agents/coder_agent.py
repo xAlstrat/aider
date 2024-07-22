@@ -8,16 +8,16 @@ from pathlib import Path
 from aider import utils
 
 from ..dump import dump  # noqa: F401
-from .base_coder import Coder
-from .editblock_prompts import EditBlockPrompts
+from .base_agent import Agent
+from .coder_prompts import CoderPrompts
 
 
-class EditBlockCoder(Coder):
-    edit_format = "diff"
+class CoderAgent(Agent):
+    agent_type = "coder"
 
-    def __init__(self, *args, **kwargs):
-        self.gpt_prompts = EditBlockPrompts()
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, diff_format=None, **kwargs):
+        self.gpt_prompts = CoderPrompts(diff_format=diff_format)
+        super().__init__(*args, diff_format=diff_format, **kwargs)
 
     def get_edits(self):
         content = self.partial_response_content

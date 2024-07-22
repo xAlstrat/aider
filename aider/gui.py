@@ -7,7 +7,7 @@ import sys
 import streamlit as st
 
 from aider import urls
-from aider.coders import Coder
+from aider.agents import Agent
 from aider.dump import dump  # noqa: F401
 from aider.io import InputOutput
 from aider.main import main as cli_main
@@ -65,7 +65,7 @@ def get_state():
 @st.cache_resource
 def get_coder():
     coder = cli_main(return_coder=True)
-    if not isinstance(coder, Coder):
+    if not isinstance(coder, Agent):
         raise ValueError(coder)
     if not coder.repo:
         raise ValueError("GUI can currently only be used inside a git repo")

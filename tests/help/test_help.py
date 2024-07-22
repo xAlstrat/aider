@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock
 
 import aider
-from aider.coders import Coder
+from aider.agents import Agent
 from aider.commands import Commands
 from aider.help import Help
 from aider.io import InputOutput
@@ -16,11 +16,11 @@ class TestHelp(unittest.TestCase):
 
         GPT35 = Model("gpt-3.5-turbo")
 
-        coder = Coder.create(GPT35, None, io)
+        coder = Agent.create(GPT35, None, io)
         commands = Commands(io, coder)
 
         help_coder_run = MagicMock(return_value="")
-        aider.coders.HelpCoder.run = help_coder_run
+        aider.agents.HelpAgent.run = help_coder_run
 
         commands.cmd_help("hi")
 

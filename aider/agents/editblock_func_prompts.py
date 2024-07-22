@@ -1,9 +1,9 @@
 # flake8: noqa: E501
 
-from .base_prompts import CoderPrompts
+from .base_prompts import AgentPrompts
 
 
-class EditBlockFunctionPrompts(CoderPrompts):
+class EditBlockFunctionPrompts(AgentPrompts):
     main_system = """Act as an expert software developer.
 Take requests for changes to the supplied code.
 If the request is ambiguous, ask questions.

@@ -1,37 +1,50 @@
+from aider import diffs
 from pathlib import Path
 
-from aider import diffs
+from .base_format import BaseDiffFormat
+from ...dump import dump  # noqa: F401
 
-from ..dump import dump  # noqa: F401
-from .base_coder import Coder
-from .wholefile_prompts import WholeFilePrompts
+class WholeDiffFormat(BaseDiffFormat):
+    id = "whole"
+    
+    diff_format_instructions = """Once you understand the request you MUST:
+1. Determine if any code changes are needed.
+2. Explain any needed changes.
+3. If changes are needed, output a copy of each file that needs changes."""
+    
+    
+    def format_file_diff(self, file_path, file_language, original_full=None, updated_full=None, chunks=None):
+        updated_full = updated_full + "\n" if updated_full else ""
+        return  f"""{file_path}
+{{fence[0]}}
+{updated_full}{{fence[1]}}"""
 
+    system_reminder = """To suggest changes to a file you MUST return the entire content of the updated file.
+You MUST use this *file listing* format:
 
-class WholeFileCoder(Coder):
-    edit_format = "whole"
+path/to/filename.js
+{fence[0]}
+// entire file content ...
+// ... goes in between
+{fence[1]}
 
-    def __init__(self, *args, **kwargs):
-        self.gpt_prompts = WholeFilePrompts()
-        super().__init__(*args, **kwargs)
+Every *file listing* MUST use this format:
+- First line: the filename with any originally provided path
+- Second line: opening {fence[0]}
+- ... entire content of the file ...
+- Final line: closing {fence[1]}
 
-    def update_cur_messages(self, edited):
-        if edited:
-            self.cur_messages += [
-                dict(role="assistant", content=self.gpt_prompts.redacted_edit_message)
-            ]
-        else:
-            self.cur_messages += [dict(role="assistant", content=self.partial_response_content)]
+To suggest changes to a file you MUST return a *file listing* that contains the entire content of the file.
+*NEVER* skip, omit or elide content from a *file listing* using "..." or by adding comments like "... rest of code..."!
+Create a new file you MUST return a *file listing* which includes an appropriate filename, including any appropriate path.
 
-    def render_incremental_response(self, final):
-        try:
-            return self.get_edits(mode="diff")
-        except ValueError:
-            return self.get_multi_response_content()
+{lazy_prompt}
+"""
 
     def get_edits(self, mode="update"):
-        content = self.get_multi_response_content()
+        content = self.agent.get_multi_response_content()
 
-        chat_files = self.get_inchat_relative_files()
+        chat_files = self.agent.get_inchat_relative_files()
 
         output = []
         lines = content.splitlines(keepends=True)
@@ -43,12 +56,12 @@ class WholeFileCoder(Coder):
         fname_source = None
         new_lines = []
         for i, line in enumerate(lines):
-            if line.startswith(self.fence[0]) or line.startswith(self.fence[1]):
+            if line.startswith(self.agent.fence[0]) or line.startswith(self.agent.fence[1]):
                 if fname is not None:
                     # ending an existing block
                     saw_fname = None
 
-                    full_path = self.abs_root_path(fname)
+                    full_path = self.agent.abs_root_path(fname)
 
                     if mode == "diff":
                         output += self.do_live_diff(full_path, new_lines, True)
@@ -83,7 +96,7 @@ class WholeFileCoder(Coder):
                     else:
                         # TODO: sense which file it is by diff size
                         raise ValueError(
-                            f"No filename provided before {self.fence[0]} in file listing"
+                            f"No filename provided before {self.agent.fence[0]} in file listing"
                         )
 
             elif fname is not None:
@@ -101,7 +114,7 @@ class WholeFileCoder(Coder):
         if mode == "diff":
             if fname is not None:
                 # ending an existing block
-                full_path = (Path(self.root) / fname).absolute()
+                full_path = (Path(self.agent.root) / fname).absolute()
                 output += self.do_live_diff(full_path, new_lines, False)
             return "\n".join(output)
 
@@ -126,13 +139,13 @@ class WholeFileCoder(Coder):
 
     def apply_edits(self, edits):
         for path, fname_source, new_lines in edits:
-            full_path = self.abs_root_path(path)
+            full_path = self.agent.abs_root_path(path)
             new_lines = "".join(new_lines)
-            self.io.write_text(full_path, new_lines)
+            self.agent.io.write_text(full_path, new_lines)
 
     def do_live_diff(self, full_path, new_lines, final):
         if Path(full_path).exists():
-            orig_lines = self.io.read_text(full_path).splitlines(keepends=True)
+            orig_lines = self.agent.io.read_text(full_path).splitlines(keepends=True)
 
             show_diff = diffs.diff_partial_update(
                 orig_lines,

@@ -75,13 +75,13 @@ class TestMain(TestCase):
         make_repo()
 
         Path(".aider.conf.yml").write_text("auto-commits: false\n")
-        with patch("aider.main.Coder.create") as MockCoder:
+        with patch("aider.main.Agent.create") as MockCoder:
             main(["--yes"], input=DummyInput(), output=DummyOutput())
             _, kwargs = MockCoder.call_args
             assert kwargs["auto_commits"] is False
 
         Path(".aider.conf.yml").write_text("auto-commits: true\n")
-        with patch("aider.main.Coder.create") as MockCoder:
+        with patch("aider.main.Agent.create") as MockCoder:
             main([], input=DummyInput(), output=DummyOutput())
             _, kwargs = MockCoder.call_args
             assert kwargs["auto_commits"] is True
@@ -132,41 +132,41 @@ class TestMain(TestCase):
             del os.environ["GIT_CONFIG_GLOBAL"]
 
     def test_main_args(self):
-        with patch("aider.main.Coder.create") as MockCoder:
+        with patch("aider.main.Agent.create") as MockCoder:
             # --yes will just ok the git repo without blocking on input
             # following calls to main will see the new repo already
             main(["--no-auto-commits", "--yes"], input=DummyInput())
             _, kwargs = MockCoder.call_args
             assert kwargs["auto_commits"] is False
 
-        with patch("aider.main.Coder.create") as MockCoder:
+        with patch("aider.main.Agent.create") as MockCoder:
             main(["--auto-commits"], input=DummyInput())
             _, kwargs = MockCoder.call_args
             assert kwargs["auto_commits"] is True
 
-        with patch("aider.main.Coder.create") as MockCoder:
+        with patch("aider.main.Agent.create") as MockCoder:
             main([], input=DummyInput())
             _, kwargs = MockCoder.call_args
             assert kwargs["dirty_commits"] is True
             assert kwargs["auto_commits"] is True
             assert kwargs["pretty"] is True
 
-        with patch("aider.main.Coder.create") as MockCoder:
+        with patch("aider.main.Agent.create") as MockCoder:
             main(["--no-pretty"], input=DummyInput())
             _, kwargs = MockCoder.call_args
             assert kwargs["pretty"] is False
 
-        with patch("aider.main.Coder.create") as MockCoder:
+        with patch("aider.main.Agent.create") as MockCoder:
             main(["--pretty"], input=DummyInput())
             _, kwargs = MockCoder.call_args
             assert kwargs["pretty"] is True
 
-        with patch("aider.main.Coder.create") as MockCoder:
+        with patch("aider.main.Agent.create") as MockCoder:
             main(["--no-dirty-commits"], input=DummyInput())
             _, kwargs = MockCoder.call_args
             assert kwargs["dirty_commits"] is False
 
-        with patch("aider.main.Coder.create") as MockCoder:
+        with patch("aider.main.Agent.create") as MockCoder:
             main(["--dirty-commits"], input=DummyInput())
             _, kwargs = MockCoder.call_args
             assert kwargs["dirty_commits"] is True
@@ -209,7 +209,7 @@ class TestMain(TestCase):
         with open(message_file_path, "w", encoding="utf-8") as message_file:
             message_file.write(message_file_content)
 
-        with patch("aider.main.Coder.create") as MockCoder:
+        with patch("aider.main.Agent.create") as MockCoder:
             MockCoder.return_value.run = MagicMock()
             main(
                 ["--yes", "--message-file", message_file_path],
@@ -224,7 +224,7 @@ class TestMain(TestCase):
         fname = "foo.py"
 
         with GitTemporaryDirectory():
-            with patch("aider.main.Coder.create") as MockCoder:  # noqa: F841
+            with patch("aider.main.Agent.create") as MockCoder:  # noqa: F841
                 with patch("aider.main.InputOutput") as MockSend:
 
                     def side_effect(*args, **kwargs):
@@ -236,7 +236,7 @@ class TestMain(TestCase):
                     main(["--yes", fname, "--encoding", "iso-8859-15"])
 
     @patch("aider.main.InputOutput")
-    @patch("aider.coders.base_coder.Coder.run")
+    @patch("aider.agents.base_agent.Agent.run")
     def test_main_message_adds_to_input_history(self, mock_run, MockInputOutput):
         test_message = "test message"
         mock_io_instance = MockInputOutput.return_value
@@ -246,7 +246,7 @@ class TestMain(TestCase):
         mock_io_instance.add_to_input_history.assert_called_once_with(test_message)
 
     @patch("aider.main.InputOutput")
-    @patch("aider.coders.base_coder.Coder.run")
+    @patch("aider.agents.base_agent.Agent.run")
     def test_yes(self, mock_run, MockInputOutput):
         test_message = "test message"
 
@@ -255,7 +255,7 @@ class TestMain(TestCase):
         self.assertTrue(args[1])
 
     @patch("aider.main.InputOutput")
-    @patch("aider.coders.base_coder.Coder.run")
+    @patch("aider.agents.base_agent.Agent.run")
     def test_default_yes(self, mock_run, MockInputOutput):
         test_message = "test message"
 
@@ -265,7 +265,7 @@ class TestMain(TestCase):
 
     def test_dark_mode_sets_code_theme(self):
         # Mock Coder.create to capture the configuration
-        with patch("aider.coders.Coder.create") as MockCoder:
+        with patch("aider.agents.Agent.create") as MockCoder:
             main(["--dark-mode", "--no-git"], input=DummyInput(), output=DummyOutput())
             # Ensure Coder.create was called
             MockCoder.assert_called_once()
@@ -275,7 +275,7 @@ class TestMain(TestCase):
 
     def test_light_mode_sets_code_theme(self):
         # Mock Coder.create to capture the configuration
-        with patch("aider.coders.Coder.create") as MockCoder:
+        with patch("aider.agents.Agent.create") as MockCoder:
             main(["--light-mode", "--no-git"], input=DummyInput(), output=DummyOutput())
             # Ensure Coder.create was called
             MockCoder.assert_called_once()
@@ -290,7 +290,7 @@ class TestMain(TestCase):
 
     def test_env_file_flag_sets_automatic_variable(self):
         env_file_path = self.create_env_file(".env.test", "AIDER_DARK_MODE=True")
-        with patch("aider.coders.Coder.create") as MockCoder:
+        with patch("aider.agents.Agent.create") as MockCoder:
             main(
                 ["--env-file", str(env_file_path), "--no-git"],
                 input=DummyInput(),
@@ -303,7 +303,7 @@ class TestMain(TestCase):
 
     def test_default_env_file_sets_automatic_variable(self):
         self.create_env_file(".env", "AIDER_DARK_MODE=True")
-        with patch("aider.coders.Coder.create") as MockCoder:
+        with patch("aider.agents.Agent.create") as MockCoder:
             main(["--no-git"], input=DummyInput(), output=DummyOutput())
             # Ensure Coder.create was called
             MockCoder.assert_called_once()
@@ -313,7 +313,7 @@ class TestMain(TestCase):
 
     def test_false_vals_in_env_file(self):
         self.create_env_file(".env", "AIDER_SHOW_DIFFS=off")
-        with patch("aider.coders.Coder.create") as MockCoder:
+        with patch("aider.agents.Agent.create") as MockCoder:
             main(["--no-git"], input=DummyInput(), output=DummyOutput())
             MockCoder.assert_called_once()
             _, kwargs = MockCoder.call_args
@@ -321,7 +321,7 @@ class TestMain(TestCase):
 
     def test_true_vals_in_env_file(self):
         self.create_env_file(".env", "AIDER_SHOW_DIFFS=on")
-        with patch("aider.coders.Coder.create") as MockCoder:
+        with patch("aider.agents.Agent.create") as MockCoder:
             main(["--no-git"], input=DummyInput(), output=DummyOutput())
             MockCoder.assert_called_once()
             _, kwargs = MockCoder.call_args
