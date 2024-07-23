@@ -21,6 +21,8 @@ class PlannerAgent(Agent):
         
         self.gpt_prompts = PlannerPrompts(
             diff_format=diff_format, 
+            overview_file=self.overview_file,
+            plan_file=self.plan_file, 
             plan_file_exists=self.plan_file_exists, 
             overview_file_exists=self.overview_file_exists)
         super().__init__(*args, diff_format=diff_format, **kwargs)
@@ -37,14 +39,16 @@ class PlannerAgent(Agent):
         files_messages = []
 
         repo_content = self.get_repo_map()
-        if repo_content:
-            files_messages += [
-                dict(role="user", content=repo_content),
-                dict(
-                    role="assistant",
-                    content=f"Ok, If `{self.overview_file}` & `{self.plan_file}` are listed in the repository I'm going to add you to read their content and any other file I found relevant understand the overall project. If files are not present in your repository, I will create them after collecting feedback from you about your requirements.",
-                ),
-            ]
+        # if repo_content:
+        files_messages += [
+            dict(role="user", content=repo_content or "Tell me what your role is"),
+            dict(
+                role="assistant",
+                content=f"""Ok, I will try to understand your system and requirements the best as possible to generate the best possible plan keeping the overview up to date.
+{f"Also, a plan already exists at {self.plan_file}, my job is to check its status and *validate* with you before start working in a new plan" if self.plan_file_exists else "I understand my main objective is to create a plan"}
+                """,
+            ),
+        ]
 
         if self.abs_fnames:
             files_content = self.gpt_prompts.files_content_prefix
