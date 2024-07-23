@@ -35,6 +35,9 @@ class Commands:
 
         self.help = None
 
+        self.plan_file = "CURRENT_PLAN.md"
+        self.overview_file = "PROJECT_OVERVIEW.md"
+
     def cmd_model(self, args):
         "Switch to a new LLM"
 

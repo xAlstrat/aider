@@ -275,6 +275,7 @@ class Agent:
         aider_commit_hashes=None,
         map_mul_no_files=8,
         diff_format=None,
+        **kwargs,
     ):
         if not fnames:
             fnames = []
@@ -661,8 +662,12 @@ class Agent:
         self.lint_outcome = None
         self.test_outcome = None
         self.edit_outcome = None
+        
+    def pre_run_setup(self):
+        pass
 
     def run(self, with_message=None):
+        self.pre_run_setup()
         while True:
             self.init_before_message()
 
@@ -1103,7 +1108,6 @@ class Agent:
         words = set(word.strip(quotes) for word in words)
 
         addable_rel_fnames = self.get_addable_relative_files()
-
         mentioned_rel_fnames = set()
         fname_to_rel_fnames = {}
         for rel_fname in addable_rel_fnames:

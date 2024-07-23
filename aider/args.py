@@ -208,6 +208,20 @@ def get_parser(default_config_files, git_root):
         default=default_env_file(git_root),
         help="Specify the .env file to load (default: .env in git root)",
     )
+    
+    group = parser.add_argument_group('Agent Settings')
+    group.add_argument(
+        "--plan-file",
+        metavar="PLAN_FILE",
+        default="CURRENT_PLAN.md",
+        help="Specify the file to use for handling the plan when using planner agent (default: CURRENT_PLAN.md)",
+    )
+    group.add_argument(
+        "--overview-file",
+        metavar="OVERVIEW_FILE",
+        default="PROJECT_OVERVIEW.md",
+        help="Specify the file to read project overview by default (default: PROJECT_OVERVIEW.md)",
+    )
 
     ##########
     group = parser.add_argument_group("History Files")

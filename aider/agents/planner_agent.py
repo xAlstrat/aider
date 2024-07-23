@@ -11,11 +11,28 @@ from .planner_prompts import PlannerPrompts
 
 class PlannerAgent(Agent):
     agent_type = "planner"
+    
 
-    def __init__(self, *args, diff_format=None, **kwargs):
-        self.gpt_prompts = PlannerPrompts(diff_format=diff_format)
+    def __init__(self, *args, diff_format=None, plan_file=None, overview_file=None, **kwargs):
+        self.plan_file=plan_file
+        self.overview_file=overview_file
+        self.plan_file_exists = Path(self.plan_file).exists()
+        self.overview_file_exists = Path(self.overview_file).exists()
+        
+        self.gpt_prompts = PlannerPrompts(
+            diff_format=diff_format, 
+            plan_file_exists=self.plan_file_exists, 
+            overview_file_exists=self.overview_file_exists)
         super().__init__(*args, diff_format=diff_format, **kwargs)
         
+    def pre_run_setup(self):
+        # add dependencies for the planner agent by default
+        
+        if self.plan_file and self.plan_file_exists:
+            self.add_rel_fname(self.plan_file)
+        if self.overview_file and self.overview_file_exists:
+            self.add_rel_fname(self.overview_file)
+
     def get_files_messages(self):
         files_messages = []
 
@@ -25,7 +42,7 @@ class PlannerAgent(Agent):
                 dict(role="user", content=repo_content),
                 dict(
                     role="assistant",
-                    content="Ok, If `PROJECT_OVERVIEW.md` & `CURRENT_PLAN.md` are listed in the repository I'm going to add you to read their content and any other file I found relevant understand the overall project. If files are not present in your repository, I will create them after collecting feedback from you about your requirements.",
+                    content=f"Ok, If `{self.overview_file}` & `{self.plan_file}` are listed in the repository I'm going to add you to read their content and any other file I found relevant understand the overall project. If files are not present in your repository, I will create them after collecting feedback from you about your requirements.",
                 ),
             ]
 
