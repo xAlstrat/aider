@@ -24,6 +24,8 @@ You always COMPLETELY IMPLEMENT the needed code!
 Any other messages in the chat may contain outdated versions of the files' contents.
 """  # noqa: E501
 
+    files_content_reply = "Ok, any changes I propose will be to those files."
+
     files_no_full_files = "I am not sharing any files that you can edit yet."
 
     files_no_full_files_with_repo_map = """Don't try and edit any existing file without asking me to add the files to the chat!

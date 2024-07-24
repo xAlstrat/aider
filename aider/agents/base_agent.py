@@ -609,7 +609,7 @@ class Agent:
         if self.abs_fnames:
             files_content = self.gpt_prompts.files_content_prefix
             files_content += self.get_files_content()
-            files_reply = "Ok, any changes I propose will be to those files."
+            files_reply = self.gpt_prompts.files_content_reply
         elif repo_content:
             files_content = self.gpt_prompts.files_no_full_files_with_repo_map
             files_reply = self.gpt_prompts.files_no_full_files_with_repo_map_reply
@@ -804,6 +804,9 @@ class Agent:
             platform=platform_text,
         )
         return prompt
+    
+    def get_system_reminder(self):
+        return self.diff_format.system_reminder
 
     def format_messages(self):
         self.choose_fence()
@@ -838,7 +841,7 @@ class Agent:
                     dict(role="assistant", content="Ok."),
                 ]
 
-        main_sys += "\n" + self.fmt_system_prompt(self.diff_format.system_reminder)
+        main_sys += "\n" + self.fmt_system_prompt(self.get_system_reminder())
         messages = [
             dict(role="system", content=main_sys),
         ]
@@ -849,7 +852,7 @@ class Agent:
         messages += self.get_files_messages()
 
         reminder_message = [
-            dict(role="system", content=self.fmt_system_prompt(self.diff_format.system_reminder)),
+            dict(role="system", content=self.fmt_system_prompt(self.get_system_reminder())),
         ]
 
         # TODO review impact of token count on image messages
@@ -877,7 +880,7 @@ class Agent:
                 new_content = (
                     final["content"]
                     + "\n\n"
-                    + self.fmt_system_prompt(self.diff_format.system_reminder)
+                    + self.fmt_system_prompt(self.get_system_reminder())
                 )
                 messages[-1] = dict(role=final["role"], content=new_content)
 

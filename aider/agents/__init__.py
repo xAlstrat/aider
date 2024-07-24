@@ -17,5 +17,5 @@ __all__ = [
     SingleWholeFileFunctionCoder,
     UnifiedDiffCoder,
     HelpAgent,
-    PlannerAgent
+    PlannerAgent,
 ]

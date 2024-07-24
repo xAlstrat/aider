@@ -220,12 +220,12 @@ class Commands:
 
         # system messages
         main_sys = self.coder.fmt_system_prompt(self.coder.gpt_prompts.main_system)
-        main_sys += "\n" + self.coder.fmt_system_prompt(self.coder.diff_format.system_reminder)
+        main_sys += "\n" + self.coder.fmt_system_prompt(self.coder.get_system_reminder())
         msgs = [
             dict(role="system", content=main_sys),
             dict(
                 role="system",
-                content=self.coder.fmt_system_prompt(self.coder.diff_format.system_reminder),
+                content=self.coder.fmt_system_prompt(self.coder.get_system_reminder()),
             ),
         ]
 
