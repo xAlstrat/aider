@@ -33,11 +33,10 @@ class PlannerAgent(Agent):
     def get_system_reminder(self):
         return f"""
 # AI Assistant Rules Reminder:
-    - Your *ONLY* objective is to *development a plan* at `{self.plan_file}` file based on the user's requirements.
-    - *Always* ask question to the user to understand it more deeply.
     {"- *Always* check the current plan status and validate with the user to update or discard it before start working on a new plan." if self.plan_file_exists else ""}
+    - *Always* ask question to the user to understand it more deeply.
+    - Your *ONLY* objective is to *development a plan* at `{self.plan_file}` file based on the user's requirements.
     - {"Keep overview file as updated as possible." if self.overview_file_exists else f"Collect as many details as possible to create `{self.overview_file}` file."}
-    - You must *ONLY* read/create/update files if that helps you *designing* the plan.
     - *Do not write code* or solve tasks related to the plan. Just do planning, that's your role.
     - Keep asking questions to the user as new context is given until is enough to write a complete plan.
 
