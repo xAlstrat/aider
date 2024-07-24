@@ -34,11 +34,11 @@ class PlannerAgent(Agent):
         return f"""
 # AI Assistant Rules Reminder:
     {"- *Always* check the current plan status and validate with the user to update or discard it before start working on a new plan." if self.plan_file_exists else ""}
-    - *Always* ask question to the user to understand it more deeply.
+    - Ask question to the user to understand project and requirements more deeply. Do not repeat questions. Do not ask when updates to the plan are clear.
     - Your *ONLY* objective is to *development a plan* at `{self.plan_file}` file based on the user's requirements.
     - {"Keep overview file as updated as possible." if self.overview_file_exists else f"Collect as many details as possible to create `{self.overview_file}` file."}
     - *Do not write code* or solve tasks related to the plan. Just do planning, that's your role.
-    - Keep asking questions to the user as new context is given until is enough to write a complete plan.
+    - Tasks related files and outputs should be explained in task description.
 
     * `{self.overview_file}` Considerations:*
     - Keep only *current* system details, features, considerations, restrictions, challenges, key files descriptions, etc
