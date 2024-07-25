@@ -12,7 +12,7 @@ from prompt_toolkit.enums import EditingMode
 from aider import __version__, models, utils
 from aider.args import get_parser
 from aider.agents import Agent
-from aider.commands import SwitchModel
+from aider.commands import SwitchAgent, SwitchModel
 from aider.io import InputOutput
 from aider.llm import litellm  # noqa: F401; properly init litellm on launch
 from aider.repo import GitRepo
@@ -463,7 +463,6 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
             edit_format=args.edit_format,
             agent_type=args.agent_type,
             io=io,
-            ##
             fnames=fnames,
             git_dname=git_dname,
             pretty=args.pretty,
@@ -590,6 +589,9 @@ def main(argv=None, input=None, output=None, force_git_root=None, return_coder=F
             return
         except SwitchModel as switch:
             coder = Agent.create(main_model=switch.model, io=io, from_coder=coder)
+            coder.show_announcements()
+        except SwitchAgent as switch:
+            coder = Agent.create(agent_type=switch.agent_type, io=io, from_coder=coder)
             coder.show_announcements()
 
 

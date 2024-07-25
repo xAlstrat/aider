@@ -10,7 +10,7 @@ from .base_format import BaseDiffFormat
 from ...dump import dump  # noqa: F401
 
 class EditBlockDiffFormat(BaseDiffFormat):
-    id = "edit_block"
+    id = "diff"
     
     diff_format_instructions = """Everytime you need to edit/create a file or propose file editions you MUST:
 1. Use *SEARCH/REPLACE* format.

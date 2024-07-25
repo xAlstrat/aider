@@ -88,7 +88,8 @@ class Agent:
             HelpAgent,
             UnifiedDiffCoder,
             WholeFileCoder,
-            PlannerAgent
+            PlannerAgent,
+            DeveloperAgent
         )
         from .edit_formats import (
             EditBlockDiffFormat,
@@ -105,11 +106,9 @@ class Agent:
 
         if edit_format is None:
             if from_coder:
-                edit_format = from_coder.edit_format
+                edit_format = from_coder.diff_format.id
             else:
                 edit_format = main_model.edit_format
-                
-            print(f"Using edit format: {edit_format}")
                 
         if agent_type is None:
             if from_coder:
@@ -175,7 +174,7 @@ class Agent:
         if agent_type == "coder":
             res = CoderAgent(main_model, io, **kwargs)
         elif agent_type == "developer":
-            res = CoderAgent(main_model, io, **kwargs)
+            res = DeveloperAgent(main_model, io, **kwargs)
         elif agent_type == "help":
             res = HelpAgent(main_model, io, **kwargs)
         elif agent_type == "planner":
