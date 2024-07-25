@@ -88,7 +88,8 @@ class Agent:
             HelpAgent,
             UnifiedDiffCoder,
             WholeFileCoder,
-            PlannerAgent
+            PlannerAgent,
+            DeveloperAgent
         )
         from .edit_formats import (
             EditBlockDiffFormat,
@@ -105,11 +106,9 @@ class Agent:
 
         if edit_format is None:
             if from_coder:
-                edit_format = from_coder.edit_format
+                edit_format = from_coder.diff_format.id
             else:
                 edit_format = main_model.edit_format
-                
-            print(f"Using edit format: {edit_format}")
                 
         if agent_type is None:
             if from_coder:
@@ -175,7 +174,7 @@ class Agent:
         if agent_type == "coder":
             res = CoderAgent(main_model, io, **kwargs)
         elif agent_type == "developer":
-            res = CoderAgent(main_model, io, **kwargs)
+            res = DeveloperAgent(main_model, io, **kwargs)
         elif agent_type == "help":
             res = HelpAgent(main_model, io, **kwargs)
         elif agent_type == "planner":
@@ -275,6 +274,7 @@ class Agent:
         aider_commit_hashes=None,
         map_mul_no_files=8,
         diff_format=None,
+        **kwargs,
     ):
         if not fnames:
             fnames = []
@@ -608,7 +608,7 @@ class Agent:
         if self.abs_fnames:
             files_content = self.gpt_prompts.files_content_prefix
             files_content += self.get_files_content()
-            files_reply = "Ok, any changes I propose will be to those files."
+            files_reply = self.gpt_prompts.files_content_reply
         elif repo_content:
             files_content = self.gpt_prompts.files_no_full_files_with_repo_map
             files_reply = self.gpt_prompts.files_no_full_files_with_repo_map_reply
@@ -661,8 +661,12 @@ class Agent:
         self.lint_outcome = None
         self.test_outcome = None
         self.edit_outcome = None
+        
+    def pre_run_setup(self):
+        pass
 
     def run(self, with_message=None):
+        self.pre_run_setup()
         while True:
             self.init_before_message()
 
@@ -799,6 +803,9 @@ class Agent:
             platform=platform_text,
         )
         return prompt
+    
+    def get_system_reminder(self):
+        return self.diff_format.system_reminder
 
     def format_messages(self):
         self.choose_fence()
@@ -833,7 +840,7 @@ class Agent:
                     dict(role="assistant", content="Ok."),
                 ]
 
-        main_sys += "\n" + self.fmt_system_prompt(self.diff_format.system_reminder)
+        main_sys += "\n" + self.fmt_system_prompt(self.get_system_reminder())
         messages = [
             dict(role="system", content=main_sys),
         ]
@@ -844,7 +851,7 @@ class Agent:
         messages += self.get_files_messages()
 
         reminder_message = [
-            dict(role="system", content=self.fmt_system_prompt(self.diff_format.system_reminder)),
+            dict(role="system", content=self.fmt_system_prompt(self.get_system_reminder())),
         ]
 
         # TODO review impact of token count on image messages
@@ -872,7 +879,7 @@ class Agent:
                 new_content = (
                     final["content"]
                     + "\n\n"
-                    + self.fmt_system_prompt(self.diff_format.system_reminder)
+                    + self.fmt_system_prompt(self.get_system_reminder())
                 )
                 messages[-1] = dict(role=final["role"], content=new_content)
 
@@ -1103,7 +1110,6 @@ class Agent:
         words = set(word.strip(quotes) for word in words)
 
         addable_rel_fnames = self.get_addable_relative_files()
-
         mentioned_rel_fnames = set()
         fname_to_rel_fnames = {}
         for rel_fname in addable_rel_fnames:

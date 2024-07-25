@@ -1,98 +1,65 @@
-# Plan for: Refactoring Aider Coders and Prompts
+# Plan para la implementación del agente "Developer"
 
-## Objectives
-- Separate edit formats from LLM entities
-- Create a more flexible and modular structure
-- Allow Coders to be used with specific objectives (Coding, Planning, Helping) and any editing format
+## Objetivos
+- Crear un nuevo agente "Developer" basado en el CoderAgent existente.
+- Implementar la funcionalidad para leer y ejecutar tareas desde CURRENT_PLAN.md.
+- Integrar el nuevo agente en el flujo de trabajo existente de la aplicación.
 
-## Tasks
+## Tareas
 
-1. [ ] Refactor base structure for Coders and Prompts
-   - [ ] Create `aider/coders/edit_formats/base_format.py`
-     - [ ] Define `BaseEditFormat` class for edit format operations
-   - [ ] Update `aider/coders/base_coder.py`
-     - [ ] Refine `BaseCoder` class with common functionality
-   - [ ] Update `aider/coders/base_prompts.py`
-     - [ ] Refine `BasePrompts` class with common prompt structures
+### 1. Crear archivos base para el agente Developer
+- [x] Crear archivo `aider/agents/developer_agent.py`
+  - Copiar la estructura básica de `aider/agents/coder_agent.py`
+  - Renombrar la clase principal a `DeveloperAgent`
+- [x] Crear archivo `aider/agents/developer_prompts.py`
+  - Copiar la estructura básica de `aider/agents/base_prompts.py`
+  - Renombrar la clase principal a `DeveloperPrompts`
 
-2. [ ] Implement Edit Format classes
-   - [ ] Create `aider/coders//edit_formats/unified_diff_format.py`
-     - [ ] Implement `UnifiedDiffFormat` class extending `BaseEditFormat`
-   - [ ] Create `aider/coders//edit_formats/editblock_format.py`
-     - [ ] Implement `EditBlockFormat` class extending `BaseEditFormat`
-   - [ ] Create `aider/coders//edit_formats/wholefile_format.py`
-     - [ ] Implement `WholeFileFormat` class extending `BaseEditFormat`
+### 2. Implementar funcionalidad básica del DeveloperAgent
+- [ ] En `developer_agent.py`:
+  - [ ] Modificar el constructor para cargar CURRENT_PLAN.md y PROJECT_OVERVIEW.md por defecto
+- [ ] En `developer_prompts.py`:
+  - [ ] Crear prompts específicos para el DeveloperAgent
+  - [ ] Incluir instrucciones para leer y ejecutar tareas del plan
+  - [ ] Añadir prompts para actualizar el estado de las tareas
+  - [ ] Incluir instrucciones para leer tareas desde CURRENT_PLAN.md
+  - [ ] Incluir instrucciones para actualizar el estado de las tareas en CURRENT_PLAN.md
+  - [ ] Incluir instrucciones para ejecutar tareas individuales
+  - [ ] Incluir instrucciones para recorrer todas las tareas del plan
 
-3. [ ] Refactor existing Coder classes
-   - [ ] Update `aider/coders/planner_coder.py`
-     - [ ] Refactor `PlannerCoder` to use new structure
-   - [ ] Update `aider/coders/developer_coder.py`
-     - [ ] Refactor `DeveloperCoder` to use new structure
-     - [ ] Move common "developer" skills from other coders into this class
-   - [ ] Update `aider/coders/helper_coder.py`
-     - [ ] Refactor `HelperCoder` to not use any diff format
-   - [ ] Update `aider/coders/editblock_coder.py`
-     - [ ] Refactor to use `EditBlockFormat`
-   - [ ] Update `aider/coders/udiff_coder.py`
-     - [ ] Refactor to use `UnifiedDiffFormat`
-   - [ ] Update `aider/coders/wholefile_coder.py`
-     - [ ] Refactor to use `WholeFileFormat`
+### 3. Integrar DeveloperAgent en el flujo principal
+- [ ] Actualizar `aider/main.py`:
+  - [ ] Importar DeveloperAgent
+  - [ ] Añadir opción para usar DeveloperAgent en la función principal
+- [ ] Actualizar `aider/__init__.py`:
+  - [ ] Importar DeveloperAgent para que sea accesible desde el paquete principal
 
-4. [ ] Update Prompts classes
-   - [ ] Update `aider/coders/planner_prompts.py`
-   - [ ] Update `aider/coders/developer_prompts.py`
-   - [ ] Update `aider/coders/helper_prompts.py`
-   - [ ] Update `aider/coders/editblock_prompts.py`
-   - [ ] Update `aider/coders/udiff_prompts.py`
-   - [ ] Update `aider/coders/wholefile_prompts.py`
+### 4. Pruebas
+- [ ] Crear casos de prueba unitarios para el DeveloperAgent
 
-5. [ ] Implement CoderFactory for creating Coders with specific Edit Formats
-   - [ ] Create `aider/coder_factory.py`
-     - [ ] Implement `CoderFactory` class with methods to create Coders with specific Edit Formats
+## Archivos involucrados
+- `aider/agents/developer_agent.py`: Nuevo archivo para el agente Developer
+- `aider/agents/developer_prompts.py`: Nuevo archivo para los prompts del Developer
+- `aider/main.py`: Actualización para integrar el nuevo agente
+- `aider/__init__.py`: Actualización para exponer el nuevo agente
+- `CURRENT_PLAN.md`: Este archivo, que será leído y actualizado por el DeveloperAgent
+- `PROJECT_OVERVIEW.md`: Archivo de visión general del proyecto
 
-6. [ ] Update main application to use new Coder and Edit Format structure
-   - [ ] Update `aider/main.py` to use the new `CoderFactory`
+## Consideraciones y restricciones
+- Asegurar que el DeveloperAgent sea compatible con la estructura existente del proyecto
+- Mantener la flexibilidad para futuras expansiones o modificaciones del agente
+- Considerar la posibilidad de conflictos si múltiples instancias del DeveloperAgent intentan actualizar CURRENT_PLAN.md simultáneamente
 
-7. [ ] Write unit tests for new classes and structures
-   - [ ] Create test files for each new and updated class
+## Próximos pasos (Consideraciones futuras)
+- Implementar un sistema de priorización de tareas en el plan
+- Añadir capacidad para manejar dependencias entre tareas
+- Explorar la posibilidad de integración con sistemas de gestión de proyectos externos
 
-8. [ ] Update documentation
-    - [ ] Update README.md with new structure and usage instructions
-    - [ ] Update any existing documentation to reflect the new architecture
+## Validación
+- [ ] Plan validado por el usuario
+- [ ] Implementación validada por el usuario
 
-## Base code files involved
-- aider/coders/base_coder.py: Will be updated with refined BaseCoder functionality
-- aider/coders/base_prompts.py: Will be updated with refined BasePrompts functionality
-- aider/edit_formats/base_format.py: New file for BaseEditFormat
-- aider/edit_formats/unified_diff_format.py: New file for UnifiedDiffFormat
-- aider/edit_formats/editblock_format.py: New file for EditBlockFormat
-- aider/edit_formats/wholefile_format.py: New file for WholeFileFormat
-- aider/coders/planner_coder.py: Will be refactored to use new structure
-- aider/coders/developer_coder.py: Will be refactored to use new structure
-- aider/coders/helper_coder.py: Will be refactored to not use any diff format
-- aider/coders/editblock_coder.py: Will be refactored to use EditBlockFormat
-- aider/coders/udiff_coder.py: Will be refactored to use UnifiedDiffFormat
-- aider/coders/wholefile_coder.py: Will be refactored to use WholeFileFormat
-- aider/coders/*_prompts.py: All prompt files will be updated
-- aider/coder_factory.py: New file for CoderFactory
-- aider/main.py: Will be updated to use CoderFactory
-
-## Considerations and restrictions
-- Maintain backwards compatibility where possible
-- Ensure that the new structure allows for easy addition of new Coders and Edit Formats in the future
-- Keep the core functionality of each Coder type (Developer, Planner, Helper) separate from the edit format logic
-- HelpCoder should not use any diff format as it's not meant to create/edit files
-
-## Next steps (Future considerations)
-- Implement additional Coder types as needed (e.g., ReviewerCoder, OptimizationCoder)
-- Explore the possibility of allowing users to define custom Prompts and Edit Formats
-- Consider implementing a plugin system for easy extension of Coder and Edit Format capabilities
-
-## Validation
-- [ ] Plan validated by the user
-- [ ] Implementation validated by the user
-
-## Instructions for developers
-- Always review the updated architecture documentation before starting work on any task.
-- After completing a task, update this checklist by marking the task as complete.
-- If any deviations or issues arise during task execution, communicate with the project lead for guidance.
+## Instrucciones para desarrolladores
+- Revisar siempre `PROJECT_OVERVIEW.md` antes de comenzar a trabajar en cualquier tarea para asegurar la comprensión del contexto general del proyecto.
+- Después de completar una tarea, actualizar esta lista de verificación marcando la tarea como completada.
+- Si surgen desviaciones o problemas durante la ejecución de las tareas, comunicarse con el Líder Técnico Senior de Software para obtener orientación.

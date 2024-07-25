@@ -19,6 +19,9 @@ class SwitchModel(Exception):
     def __init__(self, model):
         self.model = model
 
+class SwitchAgent(Exception):
+    def __init__(self, agent_type):
+        self.agent_type = agent_type
 
 class Commands:
     voice = None
@@ -35,6 +38,9 @@ class Commands:
 
         self.help = None
 
+        self.plan_file = "CURRENT_PLAN.md"
+        self.overview_file = "PROJECT_OVERVIEW.md"
+
     def cmd_model(self, args):
         "Switch to a new LLM"
 
@@ -42,6 +48,18 @@ class Commands:
         model = models.Model(model_name)
         models.sanity_check_models(self.io, model)
         raise SwitchModel(model)
+    
+    def cmd_agent(self, args):
+        "Switch to a new Agent"
+
+        agent_type = args.strip()
+        if agent_type == self.coder.agent_type:
+            self.io.tool_output(f"Agent already set to {self.coder.agent_type}")
+            return
+        elif agent_type not in ["coder", "planner", "developer", "helper"]:
+            self.io.tool_output(f"Invalid agent type. Available options: coder, planner, developer, helper")
+            return
+        raise SwitchAgent(agent_type)
 
     def completions_model(self):
         models = litellm.model_cost.keys()
@@ -217,12 +235,12 @@ class Commands:
 
         # system messages
         main_sys = self.coder.fmt_system_prompt(self.coder.gpt_prompts.main_system)
-        main_sys += "\n" + self.coder.fmt_system_prompt(self.coder.diff_format.system_reminder)
+        main_sys += "\n" + self.coder.fmt_system_prompt(self.coder.get_system_reminder())
         msgs = [
             dict(role="system", content=main_sys),
             dict(
                 role="system",
-                content=self.coder.fmt_system_prompt(self.coder.diff_format.system_reminder),
+                content=self.coder.fmt_system_prompt(self.coder.get_system_reminder()),
             ),
         ]
 
