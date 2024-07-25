@@ -8,10 +8,10 @@
 ## Tareas
 
 ### 1. Crear archivos base para el agente Developer
-- [ ] Crear archivo `aider/agents/developer_agent.py`
+- [x] Crear archivo `aider/agents/developer_agent.py`
   - Copiar la estructura básica de `aider/agents/coder_agent.py`
   - Renombrar la clase principal a `DeveloperAgent`
-- [ ] Crear archivo `aider/agents/developer_prompts.py`
+- [x] Crear archivo `aider/agents/developer_prompts.py`
   - Copiar la estructura básica de `aider/agents/base_prompts.py`
   - Renombrar la clase principal a `DeveloperPrompts`
 
